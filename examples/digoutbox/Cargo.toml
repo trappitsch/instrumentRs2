@@ -1,0 +1,10 @@
+[package]
+name = "digoutbox"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+instrumentrs2 = { version = "0.1.0", path = "../.." }
+
+[dev-dependencies]
+serialport = "4.9.0"
