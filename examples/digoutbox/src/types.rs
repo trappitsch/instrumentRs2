@@ -86,7 +86,7 @@ impl Parameter<String> for Channels {
     }
 
     fn try_from_writable(val: String) -> Result<Self, InstrumentRsError> {
-        let splt = val.split(',');
+        let splt = val.trim().split(',');
         let mut vals = vec![];
         for s in splt {
             match s {
@@ -150,5 +150,18 @@ impl Parameter<String> for usize {
             "0" => Ok(0),
             _ => Err(InstrumentRsError::PlaceholderError),
         }
+    }
+}
+
+// If we want to strip a string after it is returned, we need to impl this too.
+//
+// This is also necessary to be as general as possible!
+impl Parameter<String> for String {
+    fn to_writable(&self) -> String {
+        String::from(self)
+    }
+
+    fn try_from_writable(val: String) -> Result<String, InstrumentRsError> {
+        Ok(String::from(val.trim()))
     }
 }

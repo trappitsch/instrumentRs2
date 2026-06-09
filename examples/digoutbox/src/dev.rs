@@ -4,7 +4,10 @@ use std::io::{Read, Write};
 
 /// The parameter trait implements the methods to transform any of your enums or structs into / from
 /// a `Writable` parameter.
-use instrumentrs2::{InstrumentRsError, Transport, Writable};
+use instrumentrs2::{
+    InstrumentRsError,
+    transport::{Transport, Writable},
+};
 
 use crate::{Channel, Channels};
 
@@ -59,7 +62,8 @@ impl<I: Read + Write> DigOutBox<I> {
     }
 
     pub fn get_name(&mut self) -> Result<String, InstrumentRsError> {
-        self.query("*IDN", None)
+        let a = self.query("*IDN", None)?;
+        String::try_from_writable(a)
     }
 
     pub fn get_terminator(&self) -> &str {

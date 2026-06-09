@@ -1,7 +1,6 @@
 use std::{thread, time::Duration};
 
-use digoutbox::{Channel, DigOutBox};
-use instrumentrs2::InstrumentRsError;
+use digoutbox::{Channel, DigOutBox, InstrumentRsError};
 
 pub fn main() -> Result<(), InstrumentRsError> {
     let port = "/dev/ttyACM0";
