@@ -33,7 +33,10 @@ impl<I: Read + Write> DigOutBox<I> {
 
     pub fn channel(&mut self, idx: usize) -> Result<DigOutBoxChannel<'_, I>, InstrumentRsError> {
         if idx >= self.num_channels {
-            Err(InstrumentRsError::PlaceholderError)
+            Err(InstrumentRsError::ChannelOutOfRange {
+                req: idx,
+                max: self.num_channels,
+            })
         } else {
             Ok(DigOutBoxChannel::new(idx, self))
         }

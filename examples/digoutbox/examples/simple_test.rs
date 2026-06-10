@@ -9,29 +9,29 @@ pub fn main() -> Result<(), InstrumentRsError> {
     let mut interface = serialport::new(port, baud).open().unwrap();
     interface.set_timeout(Duration::from_secs(3)).unwrap();
 
-    let mut dev = DigOutBox::new(interface);
+    let mut inst = DigOutBox::new(interface);
 
-    println!("{:?}", dev.get_name());
+    println!("{:?}", inst.get_name());
     for it in 0..14 {
-        dev.channel(it)?.set_channel(Channel::On).unwrap();
+        inst.channel(it)?.set_channel(Channel::On).unwrap();
     }
 
-    println!("Status ch3: {}", dev.channel(3)?.get_channel()?);
+    println!("Status ch3: {}", inst.channel(3)?.get_channel()?);
 
-    println!("Interlock state as bool {}", dev.get_interlock_state()?);
+    println!("Interlock state as bool {}", inst.get_interlock_state()?);
 
     println!(
         "software lockout state as usize {}",
-        dev.get_software_lockout()?
+        inst.get_software_lockout()?
     );
 
     thread::sleep(Duration::from_secs(1));
 
-    let status = dev.get_all()?;
+    let status = inst.get_all()?;
     println!("{:?}", status);
 
     thread::sleep(Duration::from_secs(1));
-    dev.set_all_off().unwrap();
+    inst.set_all_off().unwrap();
 
     Ok(())
 }

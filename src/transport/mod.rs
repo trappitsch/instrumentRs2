@@ -1,5 +1,7 @@
-//! Module to hold the trait and default implementations via Macros for how to package and unackage
-//! commands to an instrument. We call this here the transport logic.
+//! The transport module.
+//!
+//! The driver author will use this module to aid in implemented how command packages must be formed
+//! in order to send/receive them to/from the device.
 
 use crate::InstrumentRsError;
 pub use fn_blocking::{read_until_terminator, write_all};

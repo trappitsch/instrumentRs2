@@ -50,7 +50,7 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
     ) -> Result<(), InstrumentRsError> {
         let cmd_vec = self.make_pkg(cmd, idx, args);
 
-        write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes()).unwrap();
+        write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;
 
         Ok(())
     }
@@ -58,11 +58,10 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
     fn query(&mut self, cmd: &str, idx: Option<usize>) -> Result<String, InstrumentRsError> {
         let cmd_vec = self.make_pkg(cmd, idx, None);
 
-        self.interface.write_all(&cmd_vec).unwrap();
-        self.interface.flush().unwrap();
+        self.interface.write_all(&cmd_vec)?;
+        self.interface.flush()?;
 
-        let res =
-            read_until_terminator(&mut self.interface, self.terminator.to_byte_slice()).unwrap();
-        Ok(String::from_utf8(res).unwrap())
+        let res = read_until_terminator(&mut self.interface, self.terminator.to_byte_slice())?;
+        Ok(String::from_utf8(res)?)
     }
 }

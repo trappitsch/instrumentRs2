@@ -1,6 +1,8 @@
 //! Functions associated with the transport module.
-//! TODO:
+//!
+//! TODO: Async
 //! - Think about async handler
+//! - How can we make this rt independent?
 
 use std::io::{Read, Write};
 
@@ -11,10 +13,10 @@ pub fn write_all<I: Write>(
     buf: &[u8],
     terminator: &[u8],
 ) -> Result<(), InstrumentRsError> {
-    interface.write_all(buf).unwrap();
-    interface.write_all(terminator).unwrap();
+    interface.write_all(buf)?;
+    interface.write_all(terminator)?;
 
-    interface.flush().unwrap();
+    interface.flush()?;
 
     Ok(())
 }
@@ -28,11 +30,11 @@ pub fn read_until_terminator<I: Read>(
 
     let mut buf = [0u8];
     loop {
-        interface.read_exact(&mut buf).unwrap();
+        interface.read_exact(&mut buf)?;
         ret.push(buf[0]);
 
-        if ret.len() >= terminator.len()
-            && ret.get(ret.len() - terminator.len()..ret.len()).unwrap() == terminator
+        if let Some(end) = ret.get(ret.len() - terminator.len()..ret.len())
+            && end == terminator
         {
             break;
         }

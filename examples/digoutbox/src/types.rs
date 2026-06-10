@@ -1,7 +1,7 @@
 //! Holds the types that input/output with DigOutBox can take.
 //!
-//! TODO: We need derive macros fot the Parameter impls. Ideally something that can take arguments
-//! like in thiserror, there we impl how to display, here we should impl what the writable looks like.
+//! TODO: We need derive macros for the Parameter impls. Ideally something that can take arguments
+//! like in `thiserror``, there we impl how to display, here we should impl what the writable looks like.
 
 use std::fmt;
 
@@ -29,7 +29,9 @@ impl Parameter<String> for Channel {
         match val.trim() {
             "0" => Ok(Channel::Off),
             "1" => Ok(Channel::On),
-            _ => Err(InstrumentRsError::PlaceholderError),
+            _ => Err(InstrumentRsError::BadInstrumentResponseString {
+                msg: val.trim().to_string(),
+            }),
         }
     }
 }
@@ -92,12 +94,18 @@ impl Parameter<String> for Channels {
             match s {
                 "0" => vals.push(Channel::Off),
                 "1" => vals.push(Channel::On),
-                _ => return Err(InstrumentRsError::PlaceholderError),
+                _ => {
+                    return Err(InstrumentRsError::BadInstrumentResponseString {
+                        msg: val.trim().to_string(),
+                    });
+                }
             }
         }
 
         if vals.len() != 16 {
-            return Err(InstrumentRsError::PlaceholderError);
+            return Err(InstrumentRsError::BadInstrumentResponseString {
+                msg: val.trim().to_string(),
+            });
         }
 
         Ok(Self {
@@ -134,7 +142,9 @@ impl Parameter<String> for bool {
         match val.trim() {
             "0" => Ok(false),
             "1" => Ok(true),
-            _ => Err(InstrumentRsError::PlaceholderError),
+            _ => Err(InstrumentRsError::BadInstrumentResponseString {
+                msg: val.trim().to_string(),
+            }),
         }
     }
 }
@@ -148,7 +158,9 @@ impl Parameter<String> for usize {
         match val.trim() {
             "1" => Ok(1),
             "0" => Ok(0),
-            _ => Err(InstrumentRsError::PlaceholderError),
+            _ => Err(InstrumentRsError::BadInstrumentResponseString {
+                msg: val.trim().to_string(),
+            }),
         }
     }
 }

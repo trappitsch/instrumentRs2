@@ -5,7 +5,7 @@
 // Exports of internal functionality.
 pub use errors::InstrumentRsError;
 
-mod device;
 mod errors;
+mod instrument;
 mod mock_interface;
 pub mod transport;
