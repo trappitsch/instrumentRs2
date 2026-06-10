@@ -7,5 +7,5 @@ pub use errors::InstrumentRsError;
 
 mod errors;
 mod instrument;
-mod mock_interface;
+pub mod mock_interface;
 pub mod transport;

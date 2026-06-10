@@ -34,9 +34,6 @@ impl<I: Read + Write> DigOutBox<I> {
         } else {
             cmd.push(0x3F); // ?
         }
-
-        // add terminator
-        self.terminator.as_bytes().iter().for_each(|b| cmd.push(*b));
         cmd
     }
 }
@@ -58,8 +55,7 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
     fn query(&mut self, cmd: &str, idx: Option<usize>) -> Result<String, InstrumentRsError> {
         let cmd_vec = self.make_pkg(cmd, idx, None);
 
-        self.interface.write_all(&cmd_vec)?;
-        self.interface.flush()?;
+        write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;
 
         let res = read_until_terminator(&mut self.interface, self.terminator.to_byte_slice())?;
         Ok(String::from_utf8(res)?)
