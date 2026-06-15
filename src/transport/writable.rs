@@ -24,3 +24,9 @@ impl Writable for Vec<u8> {
         self.as_slice()
     }
 }
+
+impl Writable for &[u8] {
+    fn to_byte_slice(&self) -> &[u8] {
+        self
+    }
+}

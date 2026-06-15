@@ -4,10 +4,10 @@
 //! in order to send/receive them to/from the device.
 
 use crate::InstrumentRsError;
-pub use fn_blocking::{read_until_terminator, write_all};
+pub use fn_sync::{read_until_terminator, write_all};
 pub use writable::Writable;
 
-pub mod fn_blocking;
+pub mod fn_sync;
 pub mod writable;
 
 /// The transport trait takes a mutable reference to self in order to interact with the interface.

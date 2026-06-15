@@ -7,4 +7,7 @@ edition = "2024"
 instrumentrs2 = { version = "0.1.0", path = "../.." }
 
 [dev-dependencies]
+instrumentrs2 = { version = "0.1.0", path = "../..", features = [
+  "mock-interface",
+] }
 serialport = "4.9.0"

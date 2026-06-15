@@ -5,3 +5,11 @@ edition = "2024"
 
 [dependencies]
 thiserror = "2"
+
+termcolor = { version = "1.4", optional = true }
+
+[features]
+mock-interface = ["dep:termcolor"]
+
+[dev-dependencies]
+cool_asserts = "2.0.4"

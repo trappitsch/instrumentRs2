@@ -1,11 +1,11 @@
 //! Provides a blocking mock interface to test instrument drivers.
 
 use std::{
-    io::{self, Read, Write},
+    io::{Read, Write},
     thread,
 };
 
-use thiserror::Error;
+use crate::mock_interface::errors::MockError;
 
 /// A mock interface for testing instrument drivers based on `InstrumentRs`.
 ///
@@ -28,24 +28,24 @@ pub struct MockInterface {
     expected_write: Vec<u8>,
     /// Counter how many writes we have already done.
     ///
-    /// In the end, this must be equal to the length of the expected_write.
-    write_cnt: usize,
+    /// Index where we are in the write.
+    write_idx: usize,
     /// Number of flushes we expect when writing.
     ///
     /// Everytime a full command is written, the interface must be flushed. Thus, this number is
     /// equal to the number of full write commands.
     flush_exp: usize,
-    /// Counter of how many flushes have been called.
+    /// Number of flushes "received" / counted.
     ///
     /// We expect one flush to be called for every full package that is sent to the device.
-    flush_cnt: usize,
+    flush_rec: usize,
 }
 
 impl MockInterface {
     /// Creates a new Mock interface with the loaded expected_reads and exected_writes.
     ///
     /// For each complete write and read call, you must supply a Vec<u8> with the expected bytes
-    /// that are sent to and read from the device. The number of comlete write calls must ultimately
+    /// that are sent to and read from the device. The number of complete write calls must ultimately
     /// be the number of how many times flush was called.
     pub fn new(expected_reads: Vec<Vec<u8>>, expected_writes: Vec<Vec<u8>>) -> Self {
         let expected_read = expected_reads.into_iter().flatten().collect();
@@ -55,9 +55,9 @@ impl MockInterface {
             expected_read,
             read_idx: 0,
             expected_write,
-            write_cnt: 0,
+            write_idx: 0,
             flush_exp,
-            flush_cnt: 0,
+            flush_rec: 0,
         }
     }
 
@@ -71,21 +71,25 @@ impl MockInterface {
     /// pass, it will panic with an appropriate error message of the first check that failed.
     pub fn finalize(&mut self) {
         if self.read_idx != self.expected_read.len() {
+            let bytes = &self.expected_read[self.read_idx..];
+            let rdbl = String::from_utf8_lossy(bytes);
             panic!(
-                "The expected read vector was not fully depleted: Remaining data we expected to read: {:?}",
-                &self.expected_read[self.read_idx..]
+                "The expected read vector was not fully depleted: Remaining data we expected to read: {:?} (string: '{}')",
+                bytes, rdbl
             )
         }
-        if self.write_cnt != self.expected_write.len() {
+        if self.write_idx != self.expected_write.len() {
+            let bytes = &self.expected_write[self.write_idx..];
+            let rdbl = String::from_utf8_lossy(bytes);
             panic!(
-                "The expected write vector was not fully depleted: Remaining data we expected to write: {:?}",
-                &self.expected_write[self.write_cnt..]
+                "The expected write vector was not fully depleted: Remaining data we expected to write: {:?} (string: '{}')",
+                bytes, rdbl
             )
         }
-        if self.flush_exp != self.flush_cnt {
+        if self.flush_exp != self.flush_rec {
             panic!(
-                "We expected the interface to be flushed {} times but it was only flushed {} times.",
-                self.flush_exp, self.flush_cnt
+                "We expected the interface to be flushed {} time(s) but it was only flushed {} time(s).",
+                self.flush_exp, self.flush_rec
             )
         }
     }
@@ -94,10 +98,9 @@ impl MockInterface {
 impl Drop for MockInterface {
     fn drop(&mut self) {
         // if we aleady panicked, ignore the drop checks.
-        if thread::panicking() {
-            return;
+        if !thread::panicking() {
+            self.finalize();
         }
-        self.finalize();
     }
 }
 
@@ -110,7 +113,7 @@ impl Read for MockInterface {
 
         buf.copy_from_slice(&self.expected_read[self.read_idx..end_idx]);
 
-        self.read_idx += 1;
+        self.read_idx += buf.len();
 
         Ok(buf.len())
     }
@@ -118,52 +121,31 @@ impl Read for MockInterface {
 
 impl Write for MockInterface {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        let end_idx = self.write_cnt + buf.len();
+        let end_idx = self.write_idx + buf.len();
 
         if end_idx > self.expected_write.len() {
             return Err(MockError::NoMoreWriteData.into());
         }
 
         for b in buf {
-            if &self.expected_write[self.write_cnt] != b {
+            if &self.expected_write[self.write_idx] != b {
                 return Err(MockError::UnexpectedWrite {
-                    exp: self.expected_write[self.write_cnt],
-                    rec: *b,
+                    expected: self.expected_write[self.write_idx],
+                    expected_char: self.expected_write[self.write_idx] as char,
+                    recieved: *b,
+                    received_char: *b as char,
                 }
                 .into());
             }
 
-            self.write_cnt += 1;
+            self.write_idx += 1;
         }
 
         Ok(buf.len())
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
-        self.flush_cnt += 1;
+        self.flush_rec += 1;
         Ok(())
-    }
-}
-
-#[derive(Debug, Error)]
-pub enum MockError {
-    #[error("UnexpectedWrite: Write expected byte {exp:?} but received byte {rec:?}.")]
-    UnexpectedWrite { exp: u8, rec: u8 },
-    #[error("NoMoreReadData: The expected_read data were depleted but more data were requested.")]
-    NoMoreReadData,
-    #[error(
-        "NoMoreWriteData: The expected_write data were depleted but more writes were performed by the instrument."
-    )]
-    NoMoreWriteData,
-}
-
-impl From<MockError> for io::Error {
-    fn from(err: MockError) -> Self {
-        let kind = match &err {
-            MockError::UnexpectedWrite { exp: _, rec: _ } => io::ErrorKind::InvalidInput,
-            MockError::NoMoreReadData => io::ErrorKind::InvalidData,
-            MockError::NoMoreWriteData => io::ErrorKind::InvalidData,
-        };
-        io::Error::new(kind, err)
     }
 }

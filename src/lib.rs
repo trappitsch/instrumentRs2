@@ -7,5 +7,7 @@ pub use errors::InstrumentRsError;
 
 mod errors;
 mod instrument;
-pub mod mock_interface;
 pub mod transport;
+
+#[cfg(feature = "mock-interface")]
+pub mod mock_interface;
