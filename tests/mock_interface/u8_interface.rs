@@ -3,7 +3,7 @@
 use std::io::Write;
 
 use cool_asserts::assert_panics;
-use instrumentrs2::{smockb, u};
+use instrumentrs2::{smock, u};
 
 use crate::InstrumentU8;
 
@@ -13,7 +13,7 @@ fn read_write_passes() {
     let exp_reads = ["Hello".as_bytes()];
     let exp_writes = ["cmd: sendcmd".as_bytes(), "cmd query".as_bytes()];
 
-    let mut inst = smockb!(InstrumentU8, exp_reads, exp_writes);
+    let mut inst = smock!(InstrumentU8, exp_reads, exp_writes);
 
     // write only
     u!(inst.write_u8(exp_writes[0]));
@@ -29,7 +29,7 @@ fn panic_unused_writes() {
     let exp_reads: Vec<&[u8]> = vec![];
     let exp_writes = [wrt_str.as_bytes()];
 
-    let inst = smockb!(InstrumentU8, exp_reads, exp_writes);
+    let inst = smock!(InstrumentU8, exp_reads, exp_writes);
     assert_panics!(
         drop(inst),
         includes("expected write vector"),
@@ -44,7 +44,7 @@ fn panic_unused_reads() {
     let exp_reads = [rd_str.as_bytes()];
     let exp_writes: Vec<&[u8]> = vec![];
 
-    let inst = smockb!(InstrumentU8, exp_reads, exp_writes);
+    let inst = smock!(InstrumentU8, exp_reads, exp_writes);
     assert_panics!(
         drop(inst),
         includes("expected read vector"),
@@ -57,7 +57,7 @@ fn panic_unused_reads() {
 fn panic_too_many_flushes() {
     let exp: Vec<&[u8]> = vec![];
 
-    let mut inst = smockb!(InstrumentU8, exp, exp);
+    let mut inst = smock!(InstrumentU8, exp, exp);
     inst.interface.flush().unwrap();
 
     assert_panics!(
@@ -72,7 +72,7 @@ fn panic_too_few_flushes() {
     let exp_read: Vec<&[u8]> = vec![];
     let exp_write = ["WRITE".as_bytes()];
 
-    let mut inst = smockb!(InstrumentU8, exp_read, exp_write);
+    let mut inst = smock!(InstrumentU8, exp_read, exp_write);
     inst.interface.write_all(exp_write[0]).unwrap();
 
     assert_panics!(
@@ -87,7 +87,7 @@ fn error_no_more_reads_expected() {
     let exp_read: Vec<&[u8]> = vec![];
     let exp_write = ["CMD".as_bytes()];
 
-    let mut inst = smockb!(InstrumentU8, exp_read, exp_write);
+    let mut inst = smock!(InstrumentU8, exp_read, exp_write);
 
     match inst.query_u8(exp_write[0]) {
         Err(e) => assert!(e.to_string().contains("NoMoreReadData")),
@@ -101,7 +101,7 @@ fn error_no_more_writes_expected() {
     let exp_read: Vec<&[u8]> = vec![];
     let exp_write = ["CM".as_bytes()];
 
-    let mut inst = smockb!(InstrumentU8, exp_read, exp_write);
+    let mut inst = smock!(InstrumentU8, exp_read, exp_write);
 
     match inst.write_u8("CMD".as_bytes()) {
         Err(e) => assert!(e.to_string().contains("NoMoreWriteData")),
@@ -118,7 +118,7 @@ fn error_unexpected_write() {
     let exp_read: Vec<&[u8]> = vec![];
     let exp_write = ["CMD".as_bytes()];
 
-    let mut inst = smockb!(InstrumentU8, exp_read, exp_write);
+    let mut inst = smock!(InstrumentU8, exp_read, exp_write);
 
     match inst.write_u8("RMD".as_bytes()) {
         Err(e) => {

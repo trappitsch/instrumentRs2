@@ -49,13 +49,30 @@ macro_rules! u {
 }
 
 #[macro_export]
-/// Create your Instrument loaded with expected reads and writes and an automatic terminator in a mock interface.
+/// Create your Instrument loaded with expected reads and writes in a mock interface.
 ///
 /// This macro is valuable for testing as it allows you to easily construct your instrument and load
 /// it with the interface that contains already the expected read and write values for testing.
+/// Note that no terminator is added. This is useful for instruments that send and receive
+/// well-defined packages where the number of bytes are counted when reading.
+///
+/// TODO: Example how to use this for an instrument with a terminator.
+/// TODO: Example how to use this for an instrument without a terminator.
 ///
 /// Only available on feature "mock-interface".
 macro_rules! smock {
+    ($instrument: ident, $expected_reads:expr, $expected_writes:expr) => {{
+        let reads: Vec<Vec<u8>> = $expected_reads
+            .iter()
+            .map(|w| $crate::transport::Writable::to_byte_slice(w).to_vec())
+            .collect();
+        let writes: Vec<Vec<u8>> = $expected_writes
+            .iter()
+            .map(|w| $crate::transport::Writable::to_byte_slice(w).to_vec())
+            .collect();
+        let interface = $crate::mock_interface::MockInterface::new(reads, writes);
+        $instrument::new(interface)
+    }};
     ($instrument: ident, $expected_reads:expr, $expected_writes:expr, $terminator:expr) => {{
         let term_bts = $crate::transport::Writable::to_byte_slice(&$terminator).to_vec();
 
@@ -74,30 +91,6 @@ macro_rules! smock {
                 bts.extend_from_slice(&term_bts);
                 bts
             })
-            .collect();
-        let interface = $crate::mock_interface::MockInterface::new(reads, writes);
-        $instrument::new(interface)
-    }};
-}
-
-#[macro_export]
-/// Create your Instrument loaded with expected reads and writes without an automatic terminator in a mock interface.
-///
-/// This macro is valuable for testing as it allows you to easily construct your instrument and load
-/// it with the interface that contains already the expected read and write values for testing.
-/// Note that no terminator is added. This is useful for instruments that send and receive
-/// well-defined packages where the number of bytes are counted when reading.
-///
-/// Only available on feature "mock-interface".
-macro_rules! smockb {
-    ($instrument: ident, $expected_reads:expr, $expected_writes:expr) => {{
-        let reads: Vec<Vec<u8>> = $expected_reads
-            .iter()
-            .map(|w| $crate::transport::Writable::to_byte_slice(w).to_vec())
-            .collect();
-        let writes: Vec<Vec<u8>> = $expected_writes
-            .iter()
-            .map(|w| $crate::transport::Writable::to_byte_slice(w).to_vec())
             .collect();
         let interface = $crate::mock_interface::MockInterface::new(reads, writes);
         $instrument::new(interface)
