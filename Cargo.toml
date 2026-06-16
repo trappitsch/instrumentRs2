@@ -5,10 +5,11 @@ edition = "2024"
 
 [dependencies]
 thiserror = "2"
-
+futures = { version = "0.3", optional = true }
 termcolor = { version = "1.4", optional = true }
 
 [features]
+async = ["dep:futures"]
 mock-interface = ["dep:termcolor"]
 
 [dev-dependencies]

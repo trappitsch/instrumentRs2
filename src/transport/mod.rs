@@ -7,6 +7,12 @@ use crate::InstrumentError;
 pub use fn_sync::{read_until_terminator, write_all};
 pub use writable::Writable;
 
+#[cfg(feature = "async")]
+pub use fn_async::{read_until_terminator_async, write_all_async};
+
+#[cfg(feature = "async")]
+pub mod fn_async;
+
 pub mod fn_sync;
 pub mod writable;
 
@@ -32,4 +38,25 @@ pub trait Transport<W: Writable, WR: Writable> {
         idx: Option<Self::Channel>,
         args: Option<&[W]>,
     ) -> Result<WR, InstrumentError>;
+}
+
+/// The transport trait for asynchronous communications.
+#[cfg(feature = "async")]
+pub trait TransportAsync<W: Writable, WR: Writable> {
+    type Channel;
+    /// The send command that you need to implement.
+    fn sendcmd(
+        &mut self,
+        cmd: W,
+        idx: Option<Self::Channel>,
+        args: Option<&[W]>,
+    ) -> impl Future<Output = Result<(), InstrumentError>> + Send;
+
+    /// The query command that you need to implement
+    fn query(
+        &mut self,
+        cmd: W,
+        idx: Option<Self::Channel>,
+        args: Option<&[W]>,
+    ) -> impl Future<Output = Result<WR, InstrumentError>> + Send;
 }

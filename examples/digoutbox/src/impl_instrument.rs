@@ -11,29 +11,27 @@ use instrumentrs2::transport::{Transport, Writable, read_until_terminator, write
 
 use crate::{DigOut, DigOutBox, Parameter};
 
-impl<I: Read + Write> DigOutBox<I> {
-    fn make_pkg(&self, cmd: &str, idx: Option<DigOut>, args: Option<&[&str]>) -> Vec<u8> {
-        // Turn command into an array of vector bytes.
-        let mut cmd = Vec::from(cmd);
+pub fn make_pkg(cmd: &str, idx: Option<DigOut>, args: Option<&[&str]>) -> Vec<u8> {
+    // Turn command into an array of vector bytes.
+    let mut cmd = Vec::from(cmd);
 
-        // add channel if it exists
-        if let Some(o) = idx {
-            o.to_writable().as_bytes().iter().for_each(|b| cmd.push(*b));
-        }
-
-        // add arguments, all separated by a space as per driver description
-        if let Some(inner) = args {
-            for arg in inner {
-                arg.as_bytes().iter().for_each(|b| {
-                    cmd.push(0x20); // space
-                    cmd.push(*b);
-                });
-            }
-        } else {
-            cmd.push(0x3F); // ?
-        }
-        cmd
+    // add channel if it exists
+    if let Some(o) = idx {
+        o.to_writable().as_bytes().iter().for_each(|b| cmd.push(*b));
     }
+
+    // add arguments, all separated by a space as per driver description
+    if let Some(inner) = args {
+        for arg in inner {
+            arg.as_bytes().iter().for_each(|b| {
+                cmd.push(0x20); // space
+                cmd.push(*b);
+            });
+        }
+    } else {
+        cmd.push(0x3F); // ?
+    }
+    cmd
 }
 
 impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
@@ -44,7 +42,7 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
         idx: Option<DigOut>,
         args: Option<&[&str]>,
     ) -> Result<(), InstrumentError> {
-        let cmd_vec = self.make_pkg(cmd, idx, args);
+        let cmd_vec = make_pkg(cmd, idx, args);
 
         write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;
 
@@ -57,7 +55,7 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
         idx: Option<DigOut>,
         _args: Option<&[&str]>,
     ) -> Result<String, InstrumentError> {
-        let cmd_vec = self.make_pkg(cmd, idx, None);
+        let cmd_vec = make_pkg(cmd, idx, None);
 
         write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;
 
