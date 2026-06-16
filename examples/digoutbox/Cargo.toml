@@ -3,11 +3,33 @@ name = "digoutbox"
 version = "0.1.0"
 edition = "2024"
 
+
 [dependencies]
 instrumentrs2 = { version = "0.1.0", path = "../.." }
+
 
 [dev-dependencies]
 instrumentrs2 = { version = "0.1.0", path = "../..", features = [
   "mock-interface",
 ] }
-serialport = "4.9.0"
+serialport = { version = "4.9.1-alpha0", features = ["async-io"] }
+smol = "2.0.2"
+smol-macros = "0.1.1"
+tokio = { version = "1.52.3", features = ["full"] }
+
+
+[features]
+async = ["instrumentrs2/async"]
+
+
+[[example]]
+name = "ex_tokio"
+required-features = ["async"]
+
+[[example]]
+name = "ex_smol"
+required-features = ["async"]
+
+
+[patch.crates-io]
+serialport = { git = "https://github.com/Orkavian/serialport-rs/", branch = "async-support" }
