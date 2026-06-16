@@ -91,9 +91,9 @@ pub fn pretty_error<D: Display>(emsg: D) -> Result<String, io::Error> {
 
     // second line to red, third line to green if we have three line error message.
     if lines.len() == 3 {
-        buf.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
-        writeln!(&mut buf, "{}", lines[1])?;
         buf.set_color(ColorSpec::new().set_fg(Some(Color::Blue)))?;
+        writeln!(&mut buf, "{}", lines[1])?;
+        buf.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
         writeln!(&mut buf, "{}", lines[2])?;
         buf.reset()?;
     }

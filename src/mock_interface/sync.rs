@@ -15,27 +15,25 @@ pub struct MockInterface {
     /// What we expect the interface to read from the device.
     ///
     /// This is a flattened vector of all the bytes that we expect to read.
-    /// While reading the vector, we will consume it.
     expected_read: Vec<u8>,
-    /// Index where we are currently reading.
+    /// Index where we are currently at in the `expected_read` when reading.
     ///
-    /// At the end, this must be equal to the length of the vector.
+    /// At the end, this must be equal to the length of the `expected_read` vector.
     read_idx: usize,
-    /// What we expect the interface to be write to the instrument.
+    /// What we expect the interface to write to the instrument.
     ///
     /// If filled, this is a flattened vector of all bytes we expect to write.
-    /// We will consume this vector when writing.
     expected_write: Vec<u8>,
-    /// Counter how many writes we have already done.
+    /// Index where we are currently at in the `expected_write` when writing.
     ///
-    /// Index where we are in the write.
+    /// At the end, this must be equal to the length of the `expected_write` vector.
     write_idx: usize,
-    /// Number of flushes we expect when writing.
+    /// Number of flushes we expect.
     ///
-    /// Everytime a full command is written, the interface must be flushed. Thus, this number is
+    /// Every time a full command is written the interface must be flushed. Thus, this number is
     /// equal to the number of full write commands.
     flush_exp: usize,
-    /// Number of flushes "received" / counted.
+    /// Number of flushes counted.
     ///
     /// We expect one flush to be called for every full package that is sent to the device.
     flush_rec: usize,
