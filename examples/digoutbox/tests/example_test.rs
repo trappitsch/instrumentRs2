@@ -1,4 +1,4 @@
-use digoutbox::{Channel, DigOutBox};
+use digoutbox::{DigOut, DigOutBox, DigOutState};
 
 use instrumentrs2::mock_interface::MockInterface;
 use instrumentrs2::{smock, u, uplain};
@@ -12,7 +12,9 @@ fn turn_on_channel3() {
 
     let mut inst = DigOutBox::new(interface);
 
-    inst.channel(3).unwrap().set_channel(Channel::On).unwrap();
+    inst.channel(DigOut::Out4)
+        .set_channel(DigOutState::On)
+        .unwrap();
 }
 
 #[test]
@@ -23,8 +25,8 @@ fn read_channel2_on() {
 
     let mut inst = DigOutBox::new(interface);
 
-    let ch2_state = inst.channel(2).unwrap().get_channel().unwrap();
-    std::assert_matches!(ch2_state, Channel::On);
+    let ch2_state = inst.channel(DigOut::Out3).get_channel().unwrap();
+    std::assert_matches!(ch2_state, DigOutState::On);
 }
 
 #[test]
@@ -34,8 +36,8 @@ fn read_channel2_macro() {
 
     let mut inst = smock!(DigOutBox, expected_reads, expected_writes, TERM);
 
-    let ch2_state = inst.channel(2).unwrap().get_channel().unwrap();
-    std::assert_matches!(ch2_state, Channel::On);
+    let ch2_state = inst.channel(DigOut::Out3).get_channel().unwrap();
+    std::assert_matches!(ch2_state, DigOutState::On);
 }
 
 #[test]
@@ -45,8 +47,8 @@ fn read_channel2_macro_pretty() {
 
     let mut inst = smock!(DigOutBox, expected_reads, expected_writes, TERM);
 
-    let ch2_state = u!(inst.channel(2).unwrap().get_channel());
-    std::assert_matches!(ch2_state, Channel::On);
+    let ch2_state = u!(inst.channel(DigOut::Out3).get_channel());
+    std::assert_matches!(ch2_state, DigOutState::On);
 }
 
 #[test]
@@ -58,10 +60,10 @@ fn test_on_channel0_with_macro() {
     let mut inst = smock![DigOutBox, expected_reads, expected_writes, TERM];
 
     // If an error occurs you can print it in pretty fashion if your terminal supports colors...
-    u![inst.channel(0).unwrap().set_channel(Channel::On)];
+    u![inst.channel(DigOut::Out1).set_channel(DigOutState::On)];
 
     // ... or in regular, uncolored, fashion. The pretty version, if it fails for any reasons, defaults to this.
-    uplain![inst.channel(2).unwrap().set_channel(Channel::Off)];
+    uplain![inst.channel(DigOut::Out3).set_channel(DigOutState::Off)];
 }
 
 #[test]

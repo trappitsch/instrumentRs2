@@ -35,6 +35,7 @@ impl<I: std::io::Read + Write> InstrumentStr<I> {
 }
 
 impl<I: Read + Write> Transport<&str, String> for InstrumentStr<I> {
+    type Channel = usize;
     fn sendcmd(
         &mut self,
         cmd: &str,
@@ -82,6 +83,7 @@ impl<I: std::io::Read + Write> InstrumentU8<I> {
 }
 
 impl<I: Read + Write> Transport<&[u8], Vec<u8>> for InstrumentU8<I> {
+    type Channel = usize;
     fn sendcmd(
         &mut self,
         cmd: &[u8],

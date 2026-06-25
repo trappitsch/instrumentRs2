@@ -11,16 +11,16 @@ use instrumentrs2::{
     transport::{Transport, Writable, read_until_terminator, write_all},
 };
 
-use crate::DigOutBox;
+use crate::{DigOut, DigOutBox, Parameter};
 
 impl<I: Read + Write> DigOutBox<I> {
-    fn make_pkg(&self, cmd: &str, idx: Option<usize>, args: Option<&[&str]>) -> Vec<u8> {
+    fn make_pkg(&self, cmd: &str, idx: Option<DigOut>, args: Option<&[&str]>) -> Vec<u8> {
         // Turn command into an array of vector bytes.
         let mut cmd = Vec::from(cmd);
 
         // add channel if it exists
-        if let Some(i) = idx {
-            format!("{i}").as_bytes().iter().for_each(|b| cmd.push(*b));
+        if let Some(o) = idx {
+            o.to_writable().as_bytes().iter().for_each(|b| cmd.push(*b));
         }
 
         // add arguments, all separated by a space as per driver description
@@ -39,10 +39,11 @@ impl<I: Read + Write> DigOutBox<I> {
 }
 
 impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
+    type Channel = DigOut;
     fn sendcmd(
         &mut self,
         cmd: &str,
-        idx: Option<usize>,
+        idx: Option<DigOut>,
         args: Option<&[&str]>,
     ) -> Result<(), InstrumentRsError> {
         let cmd_vec = self.make_pkg(cmd, idx, args);
@@ -52,7 +53,7 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
         Ok(())
     }
 
-    fn query(&mut self, cmd: &str, idx: Option<usize>) -> Result<String, InstrumentRsError> {
+    fn query(&mut self, cmd: &str, idx: Option<DigOut>) -> Result<String, InstrumentRsError> {
         let cmd_vec = self.make_pkg(cmd, idx, None);
 
         write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;

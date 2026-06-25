@@ -16,14 +16,15 @@ pub mod writable;
 /// returned. While `C` can be a reference, `R` typically cannot as it is read from the instrument
 /// and then forwarded.
 pub trait Transport<W: Writable, WR: Writable> {
+    type Channel;
     /// The send command that you need to implement.
     fn sendcmd(
         &mut self,
         cmd: W,
-        idx: Option<usize>,
+        idx: Option<Self::Channel>,
         args: Option<&[W]>,
     ) -> Result<(), InstrumentRsError>;
 
     /// The query command that you need to implement.
-    fn query(&mut self, cmd: W, idx: Option<usize>) -> Result<WR, InstrumentRsError>;
+    fn query(&mut self, cmd: W, idx: Option<Self::Channel>) -> Result<WR, InstrumentRsError>;
 }

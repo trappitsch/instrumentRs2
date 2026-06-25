@@ -9,7 +9,7 @@ use instrumentrs2::{
     transport::{Transport, Writable},
 };
 
-use crate::{Channel, Channels};
+use crate::{DigOut, DigOutState, DigOutStates};
 
 pub trait Parameter<W: Writable>: Sized {
     fn to_writable(&self) -> W;
@@ -19,7 +19,6 @@ pub trait Parameter<W: Writable>: Sized {
 pub struct DigOutBox<I: Read + Write> {
     pub(crate) interface: I,
     pub terminator: String,
-    pub num_channels: usize,
 }
 
 impl<I: Read + Write> DigOutBox<I> {
@@ -27,19 +26,11 @@ impl<I: Read + Write> DigOutBox<I> {
         Self {
             interface,
             terminator: String::from("\n"),
-            num_channels: 16,
         }
     }
 
-    pub fn channel(&mut self, idx: usize) -> Result<DigOutBoxChannel<'_, I>, InstrumentRsError> {
-        if idx >= self.num_channels {
-            Err(InstrumentRsError::ChannelOutOfRange {
-                req: idx,
-                max: self.num_channels,
-            })
-        } else {
-            Ok(DigOutBoxChannel::new(idx, self))
-        }
+    pub fn channel(&mut self, idx: DigOut) -> DigOutBoxChannel<'_, I> {
+        DigOutBoxChannel::new(idx, self)
     }
 
     pub fn set_all_off(&mut self) -> Result<(), InstrumentRsError> {
@@ -47,9 +38,9 @@ impl<I: Read + Write> DigOutBox<I> {
     }
 
     /// Get all channels in its own structure.
-    pub fn get_all(&mut self) -> Result<Channels, InstrumentRsError> {
+    pub fn get_all(&mut self) -> Result<DigOutStates, InstrumentRsError> {
         let a = self.query("ALLDO", None)?;
-        Channels::try_from_writable(a)
+        DigOutStates::try_from_writable(a)
     }
 
     /// Bool demo - intentionally not newtyped.
@@ -76,22 +67,22 @@ impl<I: Read + Write> DigOutBox<I> {
 
 pub struct DigOutBoxChannel<'a, I: Read + Write> {
     device: &'a mut DigOutBox<I>,
-    idx: usize,
+    idx: DigOut,
 }
 
 impl<'d, I: Read + Write> DigOutBoxChannel<'d, I> {
     /// Returns a new channel. This can only be done through the device.
-    fn new(idx: usize, device: &'d mut DigOutBox<I>) -> Self {
+    fn new(idx: DigOut, device: &'d mut DigOutBox<I>) -> Self {
         Self { device, idx }
     }
 
     /// Newtype demo for one channel.
-    pub fn get_channel(&mut self) -> Result<Channel, InstrumentRsError> {
+    pub fn get_channel(&mut self) -> Result<DigOutState, InstrumentRsError> {
         let a = self.device.query("DO", Some(self.idx))?;
-        Channel::try_from_writable(a)
+        DigOutState::try_from_writable(a)
     }
 
-    pub fn set_channel(&mut self, val: Channel) -> Result<(), InstrumentRsError> {
+    pub fn set_channel(&mut self, val: DigOutState) -> Result<(), InstrumentRsError> {
         self.device
             .sendcmd("DO", Some(self.idx), Some(&[&val.to_writable()]))
     }
