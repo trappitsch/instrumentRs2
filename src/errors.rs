@@ -3,7 +3,7 @@
 //! TODO: This needs to be tested with at least a "string" and a "&[u8]"/"bytes" instrument to make
 //! sure we have captured all possible error types (for now).
 
-use std::{fmt::Debug, io, string};
+use std::{fmt::Debug, io, num, string};
 
 use thiserror::Error;
 
@@ -22,6 +22,12 @@ pub enum InstrumentRsError {
     /// Could not convert a UTF-8 to a String.
     #[error(transparent)]
     FromUtf8(#[from] string::FromUtf8Error),
+    /// Parse error if parsing a float from a string fails.
+    #[error(transparent)]
+    ParseFloatError(#[from] num::ParseFloatError),
+    /// Parse error if parsing an int from a string fails.
+    #[error(transparent)]
+    ParseIntError(#[from] num::ParseIntError),
     /// An IO error occured when communicating with the device.
     #[error(transparent)]
     Io(#[from] io::Error),
