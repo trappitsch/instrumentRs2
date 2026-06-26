@@ -39,24 +39,24 @@ impl<I: Read + Write> DigOutBox<I> {
 
     /// Get all channels in its own structure.
     pub fn get_all(&mut self) -> Result<DigOutStates, InstrumentRsError> {
-        let a = self.query("ALLDO", None)?;
+        let a = self.query("ALLDO", None, None)?;
         DigOutStates::try_from_writable(a)
     }
 
     /// Bool demo - intentionally not newtyped.
     pub fn get_interlock_state(&mut self) -> Result<bool, InstrumentRsError> {
-        let a = self.query("INTERLOCKS", None)?;
+        let a = self.query("INTERLOCKS", None, None)?;
         bool::try_from_writable(a)
     }
 
     /// Integer demo - software lockout state.
     pub fn get_software_lockout(&mut self) -> Result<usize, InstrumentRsError> {
-        let a = self.query("SWL", None)?;
+        let a = self.query("SWL", None, None)?;
         usize::try_from_writable(a)
     }
 
     pub fn get_name(&mut self) -> Result<String, InstrumentRsError> {
-        let a = self.query("*IDN", None)?;
+        let a = self.query("*IDN", None, None)?;
         String::try_from_writable(a)
     }
 
@@ -78,7 +78,7 @@ impl<'d, I: Read + Write> DigOutBoxChannel<'d, I> {
 
     /// Newtype demo for one channel.
     pub fn get_channel(&mut self) -> Result<DigOutState, InstrumentRsError> {
-        let a = self.device.query("DO", Some(self.idx))?;
+        let a = self.device.query("DO", Some(self.idx), None)?;
         DigOutState::try_from_writable(a)
     }
 

@@ -30,7 +30,7 @@ impl<I: std::io::Read + Write> InstrumentStr<I> {
     }
 
     pub fn query_str(&mut self, cmd: &str) -> Result<String, InstrumentRsError> {
-        self.query(cmd, None)
+        self.query(cmd, None, None)
     }
 }
 
@@ -51,6 +51,7 @@ impl<I: Read + Write> Transport<&str, String> for InstrumentStr<I> {
         &mut self,
         cmd: &str,
         _idx: Option<usize>,
+        _args: Option<&[&str]>,
     ) -> Result<String, instrumentrs2::InstrumentRsError> {
         let buf = cmd.to_byte_slice();
         write_all(&mut self.interface, buf, self.terminator.to_byte_slice())?;
@@ -78,7 +79,7 @@ impl<I: std::io::Read + Write> InstrumentU8<I> {
     }
 
     pub fn query_u8(&mut self, cmd: &[u8]) -> Result<Vec<u8>, InstrumentRsError> {
-        self.query(cmd, None)
+        self.query(cmd, None, None)
     }
 }
 
@@ -100,6 +101,7 @@ impl<I: Read + Write> Transport<&[u8], Vec<u8>> for InstrumentU8<I> {
         &mut self,
         cmd: &[u8],
         _idx: Option<usize>,
+        _args: Option<&[&[u8]]>,
     ) -> Result<Vec<u8>, instrumentrs2::InstrumentRsError> {
         self.sendcmd(cmd, _idx, None)?;
         let mut buf = [0u8; 5];

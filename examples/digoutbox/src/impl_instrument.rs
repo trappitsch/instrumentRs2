@@ -53,7 +53,12 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
         Ok(())
     }
 
-    fn query(&mut self, cmd: &str, idx: Option<DigOut>) -> Result<String, InstrumentRsError> {
+    fn query(
+        &mut self,
+        cmd: &str,
+        idx: Option<DigOut>,
+        _args: Option<&[&str]>,
+    ) -> Result<String, InstrumentRsError> {
         let cmd_vec = self.make_pkg(cmd, idx, None);
 
         write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;

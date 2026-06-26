@@ -26,5 +26,10 @@ pub trait Transport<W: Writable, WR: Writable> {
     ) -> Result<(), InstrumentRsError>;
 
     /// The query command that you need to implement.
-    fn query(&mut self, cmd: W, idx: Option<Self::Channel>) -> Result<WR, InstrumentRsError>;
+    fn query(
+        &mut self,
+        cmd: W,
+        idx: Option<Self::Channel>,
+        args: Option<&[W]>,
+    ) -> Result<WR, InstrumentRsError>;
 }
