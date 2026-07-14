@@ -90,4 +90,10 @@ pub enum InstrumentError {
         val_min: usize,
         val_max: usize,
     },
+    /// Any other error that a driver might return.
+    ///
+    /// Consider raising an issue in `InstrumentRs` to add specific other errors that should become
+    /// a supported `InstrumentError`.
+    #[error("{0}")]
+    Other(String),
 }
