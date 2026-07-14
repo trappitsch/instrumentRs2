@@ -5,8 +5,7 @@
 
 use std::fmt;
 
-use crate::Parameter;
-use instrumentrs2::InstrumentRsError;
+use crate::{InstrumentError, Parameter};
 
 /// State of the channel, is it on or off?
 #[derive(Clone, Copy, Debug)]
@@ -25,11 +24,11 @@ impl Parameter<String> for DigOutState {
         }
     }
 
-    fn try_from_writable(val: String) -> Result<Self, InstrumentRsError> {
+    fn try_from_writable(val: String) -> Result<Self, InstrumentError> {
         match val.trim() {
             "0" => Ok(DigOutState::Off),
             "1" => Ok(DigOutState::On),
-            _ => Err(InstrumentRsError::BadInstrumentResponseString {
+            _ => Err(InstrumentError::BadInstrumentResponseString {
                 msg: val.trim().to_string(),
             }),
         }
@@ -87,7 +86,7 @@ impl Parameter<String> for DigOutStates {
         unreachable!("This function is unreachable.")
     }
 
-    fn try_from_writable(val: String) -> Result<Self, InstrumentRsError> {
+    fn try_from_writable(val: String) -> Result<Self, InstrumentError> {
         let splt = val.trim().split(',');
         let mut vals = vec![];
         for s in splt {
@@ -95,7 +94,7 @@ impl Parameter<String> for DigOutStates {
                 "0" => vals.push(DigOutState::Off),
                 "1" => vals.push(DigOutState::On),
                 _ => {
-                    return Err(InstrumentRsError::BadInstrumentResponseString {
+                    return Err(InstrumentError::BadInstrumentResponseString {
                         msg: val.trim().to_string(),
                     });
                 }
@@ -103,7 +102,7 @@ impl Parameter<String> for DigOutStates {
         }
 
         if vals.len() != 16 {
-            return Err(InstrumentRsError::BadInstrumentResponseString {
+            return Err(InstrumentError::BadInstrumentResponseString {
                 msg: val.trim().to_string(),
             });
         }
@@ -138,11 +137,11 @@ impl Parameter<String> for bool {
         }
     }
 
-    fn try_from_writable(val: String) -> Result<Self, InstrumentRsError> {
+    fn try_from_writable(val: String) -> Result<Self, InstrumentError> {
         match val.trim() {
             "0" => Ok(false),
             "1" => Ok(true),
-            _ => Err(InstrumentRsError::BadInstrumentResponseString {
+            _ => Err(InstrumentError::BadInstrumentResponseString {
                 msg: val.trim().to_string(),
             }),
         }
@@ -154,11 +153,11 @@ impl Parameter<String> for usize {
         todo!()
     }
 
-    fn try_from_writable(val: String) -> Result<Self, InstrumentRsError> {
+    fn try_from_writable(val: String) -> Result<Self, InstrumentError> {
         match val.trim() {
             "1" => Ok(1),
             "0" => Ok(0),
-            _ => Err(InstrumentRsError::BadInstrumentResponseString {
+            _ => Err(InstrumentError::BadInstrumentResponseString {
                 msg: val.trim().to_string(),
             }),
         }
@@ -173,7 +172,7 @@ impl Parameter<String> for String {
         String::from(self)
     }
 
-    fn try_from_writable(val: String) -> Result<String, InstrumentRsError> {
+    fn try_from_writable(val: String) -> Result<String, InstrumentError> {
         Ok(String::from(val.trim()))
     }
 }

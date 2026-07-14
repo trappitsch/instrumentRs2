@@ -3,7 +3,7 @@
 //! The driver author will use this module to aid in implemented how command packages must be formed
 //! in order to send/receive them to/from the device.
 
-use crate::InstrumentRsError;
+use crate::InstrumentError;
 pub use fn_sync::{read_until_terminator, write_all};
 pub use writable::Writable;
 
@@ -23,7 +23,7 @@ pub trait Transport<W: Writable, WR: Writable> {
         cmd: W,
         idx: Option<Self::Channel>,
         args: Option<&[W]>,
-    ) -> Result<(), InstrumentRsError>;
+    ) -> Result<(), InstrumentError>;
 
     /// The query command that you need to implement.
     fn query(
@@ -31,5 +31,5 @@ pub trait Transport<W: Writable, WR: Writable> {
         cmd: W,
         idx: Option<Self::Channel>,
         args: Option<&[W]>,
-    ) -> Result<WR, InstrumentRsError>;
+    ) -> Result<WR, InstrumentError>;
 }

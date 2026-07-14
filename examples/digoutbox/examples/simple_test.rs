@@ -1,8 +1,8 @@
 use std::{thread, time::Duration};
 
-use digoutbox::{DigOut, DigOutBox, DigOutState, InstrumentRsError};
+use digoutbox::{DigOut, DigOutBox, DigOutState, InstrumentError};
 
-pub fn main() -> Result<(), InstrumentRsError> {
+pub fn main() -> Result<(), InstrumentError> {
     let port = "/dev/ttyACM0";
     let baud = 9600;
 

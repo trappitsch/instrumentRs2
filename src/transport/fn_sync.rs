@@ -6,13 +6,13 @@
 
 use std::io::{Read, Write};
 
-use crate::InstrumentRsError;
+use crate::InstrumentError;
 
 pub fn write_all<I: Write>(
     interface: &mut I,
     buf: &[u8],
     terminator: &[u8],
-) -> Result<(), InstrumentRsError> {
+) -> Result<(), InstrumentError> {
     interface.write_all(buf)?;
     interface.write_all(terminator)?;
 
@@ -25,7 +25,7 @@ pub fn write_all<I: Write>(
 pub fn read_until_terminator<I: Read>(
     interface: &mut I,
     terminator: &[u8],
-) -> Result<Vec<u8>, InstrumentRsError> {
+) -> Result<Vec<u8>, InstrumentError> {
     let mut ret = vec![];
 
     let mut buf = [0u8];

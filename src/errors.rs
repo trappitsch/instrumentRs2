@@ -3,11 +3,11 @@
 //! TODO: This needs to be tested with at least a "string" and a "&[u8]"/"bytes" instrument to make
 //! sure we have captured all possible error types (for now).
 
-use std::{ffi::os_str::Display, fmt::Debug, io, num, string};
+use std::{fmt::Debug, io, num, string};
 
 use thiserror::Error;
 
-/// Errors that are available in InstrumentRs.
+/// Errors that an instrument might return.
 ///
 /// This list gathers all errors that users might encounter when writing drivers with
 /// `instrumentRs`.
@@ -15,7 +15,7 @@ use thiserror::Error;
 /// requiring a breaking change.
 #[derive(Debug, Error)]
 #[non_exhaustive]
-pub enum InstrumentRsError {
+pub enum InstrumentError {
     /// The requested channel is outside the allowed range.
     #[error("Requested channel {req} is out of range 0..{max}.")]
     ChannelOutOfRange { req: usize, max: usize },

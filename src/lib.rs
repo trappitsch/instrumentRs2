@@ -3,7 +3,7 @@
 //! This is my playground to test out certain things.
 
 // Exports of internal functionality.
-pub use errors::InstrumentRsError;
+pub use errors::InstrumentError;
 
 mod errors;
 mod instrument;

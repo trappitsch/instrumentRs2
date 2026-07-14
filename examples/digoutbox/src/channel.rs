@@ -2,7 +2,7 @@
 //!
 //! This should ultimately also be implemented automatically by the Macro.
 
-use crate::{InstrumentRsError, Parameter};
+use crate::{InstrumentError, Parameter};
 
 /// Digital Output channels.
 #[derive(Debug, Clone, Copy)]
@@ -46,7 +46,7 @@ impl Parameter<String> for DigOut {
             DigOut::Out16 => String::from("15"),
         }
     }
-    fn try_from_writable(val: String) -> Result<Self, instrumentrs2::InstrumentRsError> {
+    fn try_from_writable(val: String) -> Result<Self, instrumentrs2::InstrumentError> {
         match val.trim() {
             "0" => Ok(DigOut::Out1),
             "1" => Ok(DigOut::Out2),
@@ -64,7 +64,7 @@ impl Parameter<String> for DigOut {
             "13" => Ok(DigOut::Out14),
             "14" => Ok(DigOut::Out15),
             "15" => Ok(DigOut::Out16),
-            _ => Err(InstrumentRsError::BadInstrumentResponseString { msg: val }),
+            _ => Err(InstrumentError::BadInstrumentResponseString { msg: val }),
         }
     }
 }

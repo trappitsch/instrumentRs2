@@ -6,10 +6,8 @@
 
 use std::io::{Read, Write};
 
-use instrumentrs2::{
-    InstrumentRsError,
-    transport::{Transport, Writable, read_until_terminator, write_all},
-};
+use crate::InstrumentError;
+use instrumentrs2::transport::{Transport, Writable, read_until_terminator, write_all};
 
 use crate::{DigOut, DigOutBox, Parameter};
 
@@ -45,7 +43,7 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
         cmd: &str,
         idx: Option<DigOut>,
         args: Option<&[&str]>,
-    ) -> Result<(), InstrumentRsError> {
+    ) -> Result<(), InstrumentError> {
         let cmd_vec = self.make_pkg(cmd, idx, args);
 
         write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;
@@ -58,7 +56,7 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
         cmd: &str,
         idx: Option<DigOut>,
         _args: Option<&[&str]>,
-    ) -> Result<String, InstrumentRsError> {
+    ) -> Result<String, InstrumentError> {
         let cmd_vec = self.make_pkg(cmd, idx, None);
 
         write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;
