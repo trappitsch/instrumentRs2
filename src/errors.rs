@@ -3,11 +3,11 @@
 //! TODO: This needs to be tested with at least a "string" and a "&[u8]"/"bytes" instrument to make
 //! sure we have captured all possible error types (for now).
 
-use std::{fmt::Debug, io, string};
+use std::{fmt::Debug, io, num, string};
 
 use thiserror::Error;
 
-/// Errors that are available in InstrumentRs.
+/// Errors that an instrument might return.
 ///
 /// This list gathers all errors that users might encounter when writing drivers with
 /// `instrumentRs`.
@@ -15,13 +15,19 @@ use thiserror::Error;
 /// requiring a breaking change.
 #[derive(Debug, Error)]
 #[non_exhaustive]
-pub enum InstrumentRsError {
+pub enum InstrumentError {
     /// The requested channel is outside the allowed range.
     #[error("Requested channel {req} is out of range 0..{max}.")]
     ChannelOutOfRange { req: usize, max: usize },
     /// Could not convert a UTF-8 to a String.
     #[error(transparent)]
     FromUtf8(#[from] string::FromUtf8Error),
+    /// Parse error if parsing a float from a string fails.
+    #[error(transparent)]
+    ParseFloatError(#[from] num::ParseFloatError),
+    /// Parse error if parsing an int from a string fails.
+    #[error(transparent)]
+    ParseIntError(#[from] num::ParseIntError),
     /// An IO error occured when communicating with the device.
     #[error(transparent)]
     Io(#[from] io::Error),
@@ -37,4 +43,57 @@ pub enum InstrumentRsError {
         "Could not convert the message received from the instrument {msg:?} into the specified type."
     )]
     BadInstrumentResponseVecU8 { msg: Vec<u8> },
+    /// A unitful value is out of range.
+    ///
+    /// This is generally used as an error to show the user that that a unitful value is out of range.
+    #[error(
+        "Provided value {val} {unit} is out of range:\n \
+            - Minimum value allowed: {val_min} {unit}\n \
+            - Maximum value allowed: {val_max} {unit}"
+    )]
+    UnitfulValueOutOfRange {
+        unit: String,
+        val: f64,
+        val_min: f64,
+        val_max: f64,
+    },
+    /// A float value is out of range.
+    #[error(
+        "Provided float value {val} is out of range:\n \
+            - Minimum value allowed: {val_min}\n \
+            - Maximum value allowed: {val_max}"
+    )]
+    FloatValueOutOfRange {
+        val: f64,
+        val_min: f64,
+        val_max: f64,
+    },
+    /// A signed integer value is out of range.
+    #[error(
+        "Provided integer value {val} is out of range:\n \
+            - Minimum value allowed: {val_min}\n \
+            - Maximum value allowed: {val_max}"
+    )]
+    IIntOutOfRange {
+        val: isize,
+        val_min: isize,
+        val_max: isize,
+    },
+    /// A unsigned integer value is out of range.
+    #[error(
+        "Provided integer value {val} is out of range:\n \
+            - Minimum value allowed: {val_min}\n \
+            - Maximum value allowed: {val_max}"
+    )]
+    UIntOutOfRange {
+        val: usize,
+        val_min: usize,
+        val_max: usize,
+    },
+    /// Any other error that a driver might return.
+    ///
+    /// Consider raising an issue in `InstrumentRs` to add specific other errors that should become
+    /// a supported `InstrumentError`.
+    #[error("{0}")]
+    Other(String),
 }

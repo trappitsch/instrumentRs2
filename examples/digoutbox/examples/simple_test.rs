@@ -1,8 +1,8 @@
 use std::{thread, time::Duration};
 
-use digoutbox::{Channel, DigOutBox, InstrumentRsError};
+use digoutbox::{DigOut, DigOutBox, DigOutState, InstrumentError};
 
-pub fn main() -> Result<(), InstrumentRsError> {
+pub fn main() -> Result<(), InstrumentError> {
     let port = "/dev/ttyACM0";
     let baud = 9600;
 
@@ -12,11 +12,17 @@ pub fn main() -> Result<(), InstrumentRsError> {
     let mut inst = DigOutBox::new(interface);
 
     println!("{:?}", inst.get_name());
-    for it in 0..14 {
-        inst.channel(it)?.set_channel(Channel::On).unwrap();
-    }
+    inst.channel(DigOut::Out1)
+        .set_channel(DigOutState::On)
+        .unwrap();
+    inst.channel(DigOut::Out2)
+        .set_channel(DigOutState::On)
+        .unwrap();
+    inst.channel(DigOut::Out4)
+        .set_channel(DigOutState::On)
+        .unwrap();
 
-    println!("Status ch3: {}", inst.channel(3)?.get_channel()?);
+    println!("Status ch1: {}", inst.channel(DigOut::Out1).get_channel()?);
 
     println!("Interlock state as bool {}", inst.get_interlock_state()?);
 

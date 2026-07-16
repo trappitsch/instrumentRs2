@@ -3,7 +3,7 @@
 use std::io::{Read, Write};
 
 use instrumentrs2::{
-    InstrumentRsError,
+    InstrumentError,
     transport::{Transport, Writable, read_until_terminator, write_all},
 };
 
@@ -25,22 +25,23 @@ impl<I: std::io::Read + Write> InstrumentStr<I> {
         }
     }
 
-    pub fn write_str(&mut self, cmd: &str) -> Result<(), InstrumentRsError> {
+    pub fn write_str(&mut self, cmd: &str) -> Result<(), InstrumentError> {
         self.sendcmd(cmd, None, None)
     }
 
-    pub fn query_str(&mut self, cmd: &str) -> Result<String, InstrumentRsError> {
-        self.query(cmd, None)
+    pub fn query_str(&mut self, cmd: &str) -> Result<String, InstrumentError> {
+        self.query(cmd, None, None)
     }
 }
 
 impl<I: Read + Write> Transport<&str, String> for InstrumentStr<I> {
+    type Channel = usize;
     fn sendcmd(
         &mut self,
         cmd: &str,
         _idx: Option<usize>,
         _args: Option<&[&str]>,
-    ) -> Result<(), instrumentrs2::InstrumentRsError> {
+    ) -> Result<(), instrumentrs2::InstrumentError> {
         let buf = cmd.to_byte_slice();
         write_all(&mut self.interface, buf, self.terminator.to_byte_slice())?;
         Ok(())
@@ -50,7 +51,8 @@ impl<I: Read + Write> Transport<&str, String> for InstrumentStr<I> {
         &mut self,
         cmd: &str,
         _idx: Option<usize>,
-    ) -> Result<String, instrumentrs2::InstrumentRsError> {
+        _args: Option<&[&str]>,
+    ) -> Result<String, instrumentrs2::InstrumentError> {
         let buf = cmd.to_byte_slice();
         write_all(&mut self.interface, buf, self.terminator.to_byte_slice())?;
         let res = read_until_terminator(&mut self.interface, self.terminator.to_byte_slice())?;
@@ -72,22 +74,23 @@ impl<I: std::io::Read + Write> InstrumentU8<I> {
         Self { interface }
     }
 
-    pub fn write_u8(&mut self, cmd: &[u8]) -> Result<(), InstrumentRsError> {
+    pub fn write_u8(&mut self, cmd: &[u8]) -> Result<(), InstrumentError> {
         self.sendcmd(cmd, None, None)
     }
 
-    pub fn query_u8(&mut self, cmd: &[u8]) -> Result<Vec<u8>, InstrumentRsError> {
-        self.query(cmd, None)
+    pub fn query_u8(&mut self, cmd: &[u8]) -> Result<Vec<u8>, InstrumentError> {
+        self.query(cmd, None, None)
     }
 }
 
 impl<I: Read + Write> Transport<&[u8], Vec<u8>> for InstrumentU8<I> {
+    type Channel = usize;
     fn sendcmd(
         &mut self,
         cmd: &[u8],
         _idx: Option<usize>,
         _args: Option<&[&[u8]]>,
-    ) -> Result<(), instrumentrs2::InstrumentRsError> {
+    ) -> Result<(), instrumentrs2::InstrumentError> {
         self.interface.write_all(cmd)?;
         self.interface.flush()?;
         Ok(())
@@ -98,7 +101,8 @@ impl<I: Read + Write> Transport<&[u8], Vec<u8>> for InstrumentU8<I> {
         &mut self,
         cmd: &[u8],
         _idx: Option<usize>,
-    ) -> Result<Vec<u8>, instrumentrs2::InstrumentRsError> {
+        _args: Option<&[&[u8]]>,
+    ) -> Result<Vec<u8>, instrumentrs2::InstrumentError> {
         self.sendcmd(cmd, _idx, None)?;
         let mut buf = [0u8; 5];
         self.interface.read_exact(&mut buf)?;

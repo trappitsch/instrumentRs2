@@ -3,7 +3,7 @@
 //! The driver author will use this module to aid in implemented how command packages must be formed
 //! in order to send/receive them to/from the device.
 
-use crate::InstrumentRsError;
+use crate::InstrumentError;
 pub use fn_sync::{read_until_terminator, write_all};
 pub use writable::Writable;
 
@@ -16,14 +16,20 @@ pub mod writable;
 /// returned. While `C` can be a reference, `R` typically cannot as it is read from the instrument
 /// and then forwarded.
 pub trait Transport<W: Writable, WR: Writable> {
+    type Channel;
     /// The send command that you need to implement.
     fn sendcmd(
         &mut self,
         cmd: W,
-        idx: Option<usize>,
+        idx: Option<Self::Channel>,
         args: Option<&[W]>,
-    ) -> Result<(), InstrumentRsError>;
+    ) -> Result<(), InstrumentError>;
 
     /// The query command that you need to implement.
-    fn query(&mut self, cmd: W, idx: Option<usize>) -> Result<WR, InstrumentRsError>;
+    fn query(
+        &mut self,
+        cmd: W,
+        idx: Option<Self::Channel>,
+        args: Option<&[W]>,
+    ) -> Result<WR, InstrumentError>;
 }
