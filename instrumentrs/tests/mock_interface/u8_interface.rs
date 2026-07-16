@@ -1,62 +1,63 @@
-//! Tests related to reading and writing the mock interface.
+//! Tests related to reading and writing the mock interface in bytes.
 
 use std::io::Write;
 
 use cool_asserts::assert_panics;
-use instrumentrs2::{smock, transport::Writable, u};
+use instrumentrs::{smock, u};
 
-use crate::InstrumentStr;
-
-static TERM: &str = "\n";
+use crate::InstrumentU8;
 
 /// Check that a write only and a write and read routine passes with the mock interface.
 #[test]
 fn read_write_passes() {
-    let exp_reads = ["answer: query"];
-    let exp_writes = ["cmd: sendcmd", "cmd query"];
+    let exp_reads = ["Hello".as_bytes()];
+    let exp_writes = ["cmd: sendcmd".as_bytes(), "cmd query".as_bytes()];
 
-    let mut inst = smock!(InstrumentStr, exp_reads, exp_writes, TERM);
+    let mut inst = smock!(InstrumentU8, exp_reads, exp_writes);
+
     // write only
-    u!(inst.write_str(exp_writes[0]));
+    u!(inst.write_u8(exp_writes[0]));
 
-    let rec = u!(inst.query_str(exp_writes[1]));
-    assert_eq!("answer: query\n", rec);
+    let rec = u!(inst.query_u8(exp_writes[1]));
+    assert_eq!("Hello".as_bytes(), rec);
 }
 
 /// Panic if we have unused writes in the mock interface when it is dropped.
 #[test]
 fn panic_unused_writes() {
-    let exp_reads: Vec<&str> = vec![];
-    let exp_writes = ["this is an unexpected write; 42"];
+    let wrt_str = "this is an unexpected write; 42";
+    let exp_reads: Vec<&[u8]> = vec![];
+    let exp_writes = [wrt_str.as_bytes()];
 
-    let inst = smock!(InstrumentStr, exp_reads, exp_writes, TERM);
+    let inst = smock!(InstrumentU8, exp_reads, exp_writes);
     assert_panics!(
         drop(inst),
         includes("expected write vector"),
-        includes(exp_writes[0])
+        includes(wrt_str)
     );
 }
 
 /// Panic if we have unused reads in the mock interface when it is dropped.
 #[test]
 fn panic_unused_reads() {
-    let exp_reads = ["this is an unexpected read; 42"];
-    let exp_writes: Vec<&str> = vec![];
+    let rd_str = "this is an unexpected read; 42";
+    let exp_reads = [rd_str.as_bytes()];
+    let exp_writes: Vec<&[u8]> = vec![];
 
-    let inst = smock!(InstrumentStr, exp_reads, exp_writes, TERM);
+    let inst = smock!(InstrumentU8, exp_reads, exp_writes);
     assert_panics!(
         drop(inst),
         includes("expected read vector"),
-        includes(exp_reads[0])
+        includes(rd_str)
     );
 }
 
 /// Panic if the more flushes to the interface took place than should have happened.
 #[test]
 fn panic_too_many_flushes() {
-    let exp: Vec<&str> = vec![];
+    let exp: Vec<&[u8]> = vec![];
 
-    let mut inst = smock!(InstrumentStr, exp, exp, TERM);
+    let mut inst = smock!(InstrumentU8, exp, exp);
     inst.interface.flush().unwrap();
 
     assert_panics!(
@@ -68,13 +69,11 @@ fn panic_too_many_flushes() {
 /// Panic if the number of flushes to the interface is smaller than the number of writes.
 #[test]
 fn panic_too_few_flushes() {
-    let exp_read: Vec<&str> = vec![];
-    let exp_write = ["WRITE"];
+    let exp_read: Vec<&[u8]> = vec![];
+    let exp_write = ["WRITE".as_bytes()];
 
-    let mut inst = smock!(InstrumentStr, exp_read, exp_write, TERM);
-    inst.interface
-        .write_all(format!("{}{}", exp_write[0], TERM).to_byte_slice())
-        .unwrap();
+    let mut inst = smock!(InstrumentU8, exp_read, exp_write);
+    inst.interface.write_all(exp_write[0]).unwrap();
 
     assert_panics!(
         drop(inst),
@@ -85,30 +84,26 @@ fn panic_too_few_flushes() {
 /// Error when no more read data were expected but the instrument requrested more.
 #[test]
 fn error_no_more_reads_expected() {
-    let exp_read: Vec<&str> = vec![];
-    let exp_write = ["CMD"];
+    let exp_read: Vec<&[u8]> = vec![];
+    let exp_write = ["CMD".as_bytes()];
 
-    let mut inst = smock!(InstrumentStr, exp_read, exp_write, TERM);
+    let mut inst = smock!(InstrumentU8, exp_read, exp_write);
 
-    match inst.query_str(exp_write[0]) {
+    match inst.query_u8(exp_write[0]) {
         Err(e) => assert!(e.to_string().contains("NoMoreReadData")),
         Ok(_) => panic!("Should have returned a NoMoreReadData error."),
     }
 }
 
 /// Error when no more write data were expected but the instrument expected to send more.
-///
-/// This error is hard to actually trigger, as the `UnexpectedWrite` error takes precedence in
-/// almost all cases. We remove the terminator here from being sent, otherwise the '\n' that would
-/// be sent would interfere with the `NoMoreWriteData` error.
 #[test]
 fn error_no_more_writes_expected() {
-    let exp_read: Vec<&str> = vec![];
-    let exp_write = ["CM"];
+    let exp_read: Vec<&[u8]> = vec![];
+    let exp_write = ["CM".as_bytes()];
 
-    let mut inst = smock!(InstrumentStr, exp_read, exp_write, "");
+    let mut inst = smock!(InstrumentU8, exp_read, exp_write);
 
-    match inst.write_str("CMD") {
+    match inst.write_u8("CMD".as_bytes()) {
         Err(e) => assert!(e.to_string().contains("NoMoreWriteData")),
         Ok(_) => panic!("Should have returned a NoMoreWriteData error."),
     }
@@ -120,12 +115,12 @@ fn error_no_more_writes_expected() {
 /// Error when an unexected byte was writen to to the device.
 #[test]
 fn error_unexpected_write() {
-    let exp_read: Vec<&str> = vec![];
-    let exp_write = ["CMD"];
+    let exp_read: Vec<&[u8]> = vec![];
+    let exp_write = ["CMD".as_bytes()];
 
-    let mut inst = smock!(InstrumentStr, exp_read, exp_write, TERM);
+    let mut inst = smock!(InstrumentU8, exp_read, exp_write);
 
-    match inst.write_str("RMD") {
+    match inst.write_u8("RMD".as_bytes()) {
         Err(e) => {
             let e = e.to_string();
             assert!(e.contains("UnexpectedWrite"));

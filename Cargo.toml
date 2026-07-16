@@ -1,15 +1,17 @@
-[package]
-name = "instrumentrs2"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = ["examples/digoutbox", "instrumentrs"]
+resolver = "3"
 
-[dependencies]
+package.version = "0.2.0"
+package.authors = ["Reto Trappitsch <reto@galactic-forensics.space>"]
+package.license = "MIT OR Apache-2.0"
+package.homepage = "https://instrument.rs"
+package.repository = "https://github.com/trappitsch/instrumentrs"
+package.edition = "2024"
+package.rust-version = "1.97"
+
+[workspace.dependencies]
+instrumentrs = { path = "./instrumentrs", version = "0.2.0" }
+
+termcolor = "1.4"
 thiserror = "2"
-
-termcolor = { version = "1.4", optional = true }
-
-[features]
-mock-interface = ["dep:termcolor"]
-
-[dev-dependencies]
-cool_asserts = "2.0.4"

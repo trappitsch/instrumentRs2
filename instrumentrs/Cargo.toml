@@ -1,0 +1,21 @@
+[package]
+name = "instrumentrs"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "A toolkit to write consistent instrument drivers fast."
+readme = "README.md"
+
+[dependencies]
+thiserror = { workspace = true }
+termcolor = { workspace = true, optional = true }
+
+[features]
+mock-interface = ["dep:termcolor"]
+
+[dev-dependencies]
+cool_asserts = "2.0.4"

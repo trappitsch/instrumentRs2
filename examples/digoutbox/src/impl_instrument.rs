@@ -7,7 +7,7 @@
 use std::io::{Read, Write};
 
 use crate::InstrumentError;
-use instrumentrs2::transport::{Transport, Writable, read_until_terminator, write_all};
+use instrumentrs::transport::{Transport, Writable, read_until_terminator, write_all};
 
 use crate::{DigOut, DigOutBox, Parameter};
 

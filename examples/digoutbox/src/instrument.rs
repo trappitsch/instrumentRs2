@@ -5,7 +5,7 @@ use std::io::{Read, Write};
 /// The parameter trait implements the methods to transform any of your enums or structs into / from
 /// a `Writable` parameter.
 use crate::InstrumentError;
-use instrumentrs2::transport::{Transport, Writable};
+use instrumentrs::transport::{Transport, Writable};
 
 use crate::{DigOut, DigOutState, DigOutStates};
 
