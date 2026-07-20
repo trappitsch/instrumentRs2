@@ -1,0 +1,55 @@
+on:
+  push:
+    branches: [staging, trying, main]
+  pull_request:
+
+name: Checks
+
+env:
+  RUSTFLAGS: "--deny warnings"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        CRATES: ["instrumentrs", "digoutbox"]
+        FEATURES: ["", "--all-features"]
+    steps:
+      - name: Install libudev
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - name: Build
+        run: cargo build -p ${{ matrix.CRATES }} ${{ matrix.FEATURES }}
+      - name: Test std
+        run: cargo test -p ${{ matrix.CRATES }} ${{ matrix.FEATURES }}
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt
+      - name: Format
+        run: cargo fmt --all -- --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        FEATURES: ["", "--all-features"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: clippy
+      - name: Clippy
+        run: cargo clippy ${{ matrix.FEATURES }} -- -D warnings

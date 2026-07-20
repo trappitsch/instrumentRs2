@@ -1,13 +1,12 @@
 [package]
 name = "digoutbox"
-version = "0.1.0"
+version = "0.0.0"
 edition = "2024"
+publish = false
 
 [dependencies]
-instrumentrs2 = { version = "0.1.0", path = "../.." }
+instrumentrs = { workspace = true }
 
 [dev-dependencies]
-instrumentrs2 = { version = "0.1.0", path = "../..", features = [
-  "mock-interface",
-] }
+instrumentrs = { workspace = true, features = ["mock-interface"] }
 serialport = "4.9.0"

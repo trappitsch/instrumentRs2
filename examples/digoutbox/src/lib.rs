@@ -6,7 +6,7 @@ pub use crate::{
     types::{DigOutState, DigOutStates},
 };
 
-pub use instrumentrs2::InstrumentError;
+pub use instrumentrs::InstrumentError;
 
 mod channel;
 mod impl_instrument;

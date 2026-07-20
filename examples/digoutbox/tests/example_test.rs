@@ -1,7 +1,6 @@
 use digoutbox::{DigOut, DigOutBox, DigOutState};
 
-use instrumentrs2::mock_interface::MockInterface;
-use instrumentrs2::{smock, u, uplain};
+use instrumentrs::{mock_interface::MockInterface, smock, u, uplain};
 
 static TERM: &str = "\n";
 

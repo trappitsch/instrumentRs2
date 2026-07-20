@@ -46,7 +46,7 @@ impl Parameter<String> for DigOut {
             DigOut::Out16 => String::from("15"),
         }
     }
-    fn try_from_writable(val: String) -> Result<Self, instrumentrs2::InstrumentError> {
+    fn try_from_writable(val: String) -> Result<Self, InstrumentError> {
         match val.trim() {
             "0" => Ok(DigOut::Out1),
             "1" => Ok(DigOut::Out2),

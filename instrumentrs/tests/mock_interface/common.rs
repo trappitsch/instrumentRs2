@@ -2,7 +2,7 @@
 
 use std::io::{Read, Write};
 
-use instrumentrs2::{
+use instrumentrs::{
     InstrumentError,
     transport::{Transport, Writable, read_until_terminator, write_all},
 };
@@ -41,7 +41,7 @@ impl<I: Read + Write> Transport<&str, String> for InstrumentStr<I> {
         cmd: &str,
         _idx: Option<usize>,
         _args: Option<&[&str]>,
-    ) -> Result<(), instrumentrs2::InstrumentError> {
+    ) -> Result<(), instrumentrs::InstrumentError> {
         let buf = cmd.to_byte_slice();
         write_all(&mut self.interface, buf, self.terminator.to_byte_slice())?;
         Ok(())
@@ -52,7 +52,7 @@ impl<I: Read + Write> Transport<&str, String> for InstrumentStr<I> {
         cmd: &str,
         _idx: Option<usize>,
         _args: Option<&[&str]>,
-    ) -> Result<String, instrumentrs2::InstrumentError> {
+    ) -> Result<String, InstrumentError> {
         let buf = cmd.to_byte_slice();
         write_all(&mut self.interface, buf, self.terminator.to_byte_slice())?;
         let res = read_until_terminator(&mut self.interface, self.terminator.to_byte_slice())?;
@@ -90,7 +90,7 @@ impl<I: Read + Write> Transport<&[u8], Vec<u8>> for InstrumentU8<I> {
         cmd: &[u8],
         _idx: Option<usize>,
         _args: Option<&[&[u8]]>,
-    ) -> Result<(), instrumentrs2::InstrumentError> {
+    ) -> Result<(), InstrumentError> {
         self.interface.write_all(cmd)?;
         self.interface.flush()?;
         Ok(())
@@ -102,7 +102,7 @@ impl<I: Read + Write> Transport<&[u8], Vec<u8>> for InstrumentU8<I> {
         cmd: &[u8],
         _idx: Option<usize>,
         _args: Option<&[&[u8]]>,
-    ) -> Result<Vec<u8>, instrumentrs2::InstrumentError> {
+    ) -> Result<Vec<u8>, InstrumentError> {
         self.sendcmd(cmd, _idx, None)?;
         let mut buf = [0u8; 5];
         self.interface.read_exact(&mut buf)?;
