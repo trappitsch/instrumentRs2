@@ -11,6 +11,8 @@ description = "A toolkit to write consistent instrument drivers fast."
 readme = "README.md"
 
 [dependencies]
+instrumentrs-macros = { workspace = true }
+
 thiserror = { workspace = true }
 termcolor = { workspace = true, optional = true }
 

@@ -1,0 +1,11 @@
+error: command string must have exactly one empty {}
+ --> tests/fails/enum_wrong_command_formatter.rs:7:10
+  |
+7 |     #[cmd("no placeholder")]
+  |          ^^^^^^^^^^^^^^^^^^
+
+error: command string must have exactly one empty {}
+  --> tests/fails/enum_wrong_command_formatter.rs:18:10
+   |
+18 |     #[cmd("two {} placeholders {}")]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^^^^
