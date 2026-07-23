@@ -1,43 +1,45 @@
 //! This module handles enums.
 
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use syn::{DataEnum, DeriveInput, Ident};
+use syn::{DataEnum, DeriveInput};
 
-use crate::derive::{cmd::CommandString, error, utils};
+use crate::derive::{cmd::CommandParseFormat, error, utils};
 
 /// Create the implementation for an enum.
-pub fn get_impl_enum(ast: &DeriveInput, data: &DataEnum) -> syn::Result<TokenStream> {
+pub fn get_impl(ast: &DeriveInput, data: &DataEnum) -> syn::Result<TokenStream> {
     let mut err_agg = error::ErrorAggregator::new();
 
     let name = &ast.ident;
 
-    let format_command = match CommandString::try_new_enum(&ast.attrs, &ast.ident.span()) {
+    let cpf = match CommandParseFormat::try_new_enum(&ast.attrs, &ast.ident.span()) {
         Ok(res) => res,
         Err(err) => {
             err_agg.push(err);
-            CommandString::default()
+            CommandParseFormat::try_from("{}").expect("valid command string")
         }
     };
 
     let mut string_attributes = Vec::new(); // needed duplicate checking
 
-    let fields: Vec<(Ident, String)> = data
+    let fields: Vec<(&Ident, String)> = data
         .variants
         .iter()
         .map(|v| {
             let formatter = match utils::get_named_attribute_content_string(&v.attrs, "param", &v) {
                 Ok(res) => {
-                    string_attributes.push(res.clone());
-                    format_command.format_with(&res.value)
+                    let ret_val = cpf
+                        .format_with_one(&res.value)
+                        .expect("checked when command parse formatter for enum was created");
+                    string_attributes.push(res);
+                    ret_val
                 }
                 Err(err) => {
                     err_agg.push(err);
                     String::new()
                 }
             };
-            let ident = v.ident.clone();
-            (ident, formatter)
+            (&v.ident, formatter)
         })
         .collect();
 
@@ -70,7 +72,7 @@ pub fn get_impl_enum(ast: &DeriveInput, data: &DataEnum) -> syn::Result<TokenStr
 }
 
 /// Creates a `Vec<TokenStream>` with the fields for the `to_writable` function.
-fn get_fields_to_writable(fields: &[(Ident, String)]) -> Vec<TokenStream> {
+fn get_fields_to_writable(fields: &[(&Ident, String)]) -> Vec<TokenStream> {
     fields
         .iter()
         .map(|(id, s)| quote!(Self::#id => String::from(#s)))
@@ -78,7 +80,7 @@ fn get_fields_to_writable(fields: &[(Ident, String)]) -> Vec<TokenStream> {
 }
 
 /// Creates a `Vec<TokenStream>` with the fields for the `try_from_writable` function.
-fn get_fields_try_from_writable(fields: &[(Ident, String)]) -> Vec<TokenStream> {
+fn get_fields_try_from_writable(fields: &[(&Ident, String)]) -> Vec<TokenStream> {
     fields
         .iter()
         .map(|(id, s)| quote!(#s => Ok(Self::#id)))
