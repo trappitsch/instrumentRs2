@@ -5,6 +5,7 @@
 // Exports of internal functionality.
 pub use errors::InstrumentError;
 
+pub mod __parsing;
 mod errors;
 mod instrument;
 pub mod transport;
