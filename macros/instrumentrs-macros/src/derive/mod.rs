@@ -6,6 +6,7 @@ use syn::{Data, DataStruct, DeriveInput};
 mod cmd;
 mod enums;
 mod error;
+mod parser;
 mod structs;
 mod utils;
 
