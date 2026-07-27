@@ -11,3 +11,6 @@ pub mod transport;
 
 #[cfg(feature = "mock-interface")]
 pub mod mock_interface;
+
+// Macro reexport
+pub use instrumentrs_macros::Parameter;

@@ -1,5 +1,10 @@
 [workspace]
-members = ["examples/digoutbox", "instrumentrs"]
+members = [
+  "examples/digoutbox",
+  "instrumentrs",
+  "macros/derive-macro-tests",
+  "macros/instrumentrs-macros",
+]
 resolver = "3"
 
 package.version = "0.2.0"
@@ -11,7 +16,13 @@ package.edition = "2024"
 package.rust-version = "1.97"
 
 [workspace.dependencies]
-instrumentrs = { path = "./instrumentrs", version = "0.2.0" }
+instrumentrs = { path = "./instrumentrs" }
+instrumentrs-macros = { path = "./macros/instrumentrs-macros/" }
 
+proc-macro2 = "1"
+quote = "1"
+syn = "3"
 termcolor = "1.4"
 thiserror = "2"
+
+trybuild = "1"

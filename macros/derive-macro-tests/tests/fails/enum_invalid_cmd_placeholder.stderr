@@ -1,0 +1,23 @@
+error: command string must have exactly one empty {}
+ --> tests/fails/enum_invalid_cmd_placeholder.rs:8:10
+  |
+8 |     #[cmd("{0}")]
+  |          ^^^^^^^
+
+error: command string must have exactly one empty {}
+  --> tests/fails/enum_invalid_cmd_placeholder.rs:20:10
+   |
+20 |     #[cmd("{X}")]
+   |          ^^^^^^^
+
+error: command string must have exactly one empty {}
+  --> tests/fails/enum_invalid_cmd_placeholder.rs:32:10
+   |
+32 |     #[cmd("{} {}")]
+   |          ^^^^^^^^^
+
+error: command string must have exactly one empty {}
+  --> tests/fails/enum_invalid_cmd_placeholder.rs:44:10
+   |
+44 |     #[cmd("none")]
+   |          ^^^^^^^^
