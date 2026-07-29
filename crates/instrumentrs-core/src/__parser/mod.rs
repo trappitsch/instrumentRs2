@@ -19,5 +19,5 @@
 //!
 //! Note: A command string MUST only use one type of placeholder; mix and match is not allowed.
 
-pub mod __char_length_parser;
-pub mod __delimited_parser;
+pub mod char_length_parser;
+pub mod delimited_parser;

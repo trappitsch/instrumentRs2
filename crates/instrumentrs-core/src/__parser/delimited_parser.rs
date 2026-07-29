@@ -1,8 +1,8 @@
 /// Delimiter struct that holds the parts surrounding the arguments in a command string.
-use crate::InstrumentError;
+use crate::errors::InstrumentError;
 
 #[derive(Debug, Default)]
-pub struct __Delimiter {
+pub struct Delimiter {
     /// Part that comes before the first argument.
     pub before: String,
     /// All the parts that come after each arguments.
@@ -12,16 +12,16 @@ pub struct __Delimiter {
 /// This is a delimited parser.
 ///
 /// It contains the delimiters and, optionally, sort keys.
-pub struct __DelimitedParser {
-    delimiter: __Delimiter,
+pub struct DelimitedParser {
+    delimiter: Delimiter,
     sort_index: Option<Vec<usize>>,
 }
 
-impl __DelimitedParser {
+impl DelimitedParser {
     /// Create a new parser from components.
     pub fn new(before: String, after: Vec<String>, sort_index: Option<Vec<usize>>) -> Self {
         Self {
-            delimiter: __Delimiter { before, after },
+            delimiter: Delimiter { before, after },
             sort_index,
         }
     }
@@ -92,7 +92,7 @@ mod test {
     #[test]
     fn simple_command_parser() {
         // Command: "{}"
-        let dp = __DelimitedParser::new("".to_string(), vec!["".to_string()], None);
+        let dp = DelimitedParser::new("".to_string(), vec!["".to_string()], None);
 
         assert_eq!(dp.parse("ASDF").unwrap(), ["ASDF"]);
     }
@@ -100,7 +100,7 @@ mod test {
     #[test]
     fn single_command_parser_with_start_and_end() {
         // Command: "START{}END"
-        let dp = __DelimitedParser::new("START".to_string(), vec!["END".to_string()], None);
+        let dp = DelimitedParser::new("START".to_string(), vec!["END".to_string()], None);
 
         assert_eq!(dp.parse("STARTASDFEND").unwrap(), ["ASDF"]);
     }
@@ -108,7 +108,7 @@ mod test {
     #[test]
     fn multiple_command_parser() {
         // Command: "CMD {},{},{},{}"
-        let dp = __DelimitedParser::new(
+        let dp = DelimitedParser::new(
             "CMD ".to_string(),
             vec![
                 ",".to_string(),
@@ -125,7 +125,7 @@ mod test {
     #[test]
     fn ensure_whitespace_is_trimmed() {
         // Command: "CMD {},{},{},{}"
-        let dp = __DelimitedParser::new(
+        let dp = DelimitedParser::new(
             "CMD ".to_string(),
             vec![
                 ",".to_string(),
@@ -142,7 +142,7 @@ mod test {
     #[test]
     fn multiple_command_parse_with_order() {
         // Command: "CMD {2},{1},{0},{3}"
-        let dp = __DelimitedParser::new(
+        let dp = DelimitedParser::new(
             "CMD ".to_string(),
             vec![
                 ",".to_string(),
