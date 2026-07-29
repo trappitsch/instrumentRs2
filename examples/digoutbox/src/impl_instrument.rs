@@ -9,7 +9,7 @@ use std::io::{Read, Write};
 use crate::InstrumentError;
 use instrumentrs::transport::{Transport, Writable, read_until_terminator, write_all};
 
-use crate::{DigOut, DigOutBox, Parameter};
+use crate::{DigOut, DigOutBox};
 
 impl<I: Read + Write> DigOutBox<I> {
     fn make_pkg(&self, cmd: &str, idx: Option<DigOut>, args: Option<&[&str]>) -> Vec<u8> {
@@ -18,7 +18,10 @@ impl<I: Read + Write> DigOutBox<I> {
 
         // add channel if it exists
         if let Some(o) = idx {
-            o.to_writable().as_bytes().iter().for_each(|b| cmd.push(*b));
+            o.inner_to_writable()
+                .as_bytes()
+                .iter()
+                .for_each(|b| cmd.push(*b));
         }
 
         // add arguments, all separated by a space as per driver description

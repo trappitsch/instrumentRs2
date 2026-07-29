@@ -9,7 +9,7 @@ use instrumentrs::transport::{Transport, Writable};
 
 use crate::{DigOut, DigOutState, DigOutStates};
 
-pub trait Parameter<W: Writable>: Sized {
+pub trait InstrumentParameter<W: Writable>: Sized {
     fn to_writable(&self) -> W;
     fn try_from_writable(val: W) -> Result<Self, InstrumentError>;
 }

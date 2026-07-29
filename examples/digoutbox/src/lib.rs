@@ -2,7 +2,7 @@
 
 pub use crate::{
     channel::DigOut,
-    instrument::{DigOutBox, Parameter},
+    instrument::{DigOutBox, InstrumentParameter},
     types::{DigOutState, DigOutStates},
 };
 

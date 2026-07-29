@@ -2,8 +2,6 @@
 //!
 //! This should ultimately also be implemented automatically by the Macro.
 
-use crate::{InstrumentError, Parameter};
-
 /// Digital Output channels.
 #[derive(Debug, Clone, Copy)]
 pub enum DigOut {
@@ -25,8 +23,8 @@ pub enum DigOut {
     Out16,
 }
 
-impl Parameter<String> for DigOut {
-    fn to_writable(&self) -> String {
+impl DigOut {
+    pub fn inner_to_writable(&self) -> String {
         match self {
             DigOut::Out1 => String::from("0"),
             DigOut::Out2 => String::from("1"),
@@ -44,27 +42,6 @@ impl Parameter<String> for DigOut {
             DigOut::Out14 => String::from("13"),
             DigOut::Out15 => String::from("14"),
             DigOut::Out16 => String::from("15"),
-        }
-    }
-    fn try_from_writable(val: String) -> Result<Self, InstrumentError> {
-        match val.trim() {
-            "0" => Ok(DigOut::Out1),
-            "1" => Ok(DigOut::Out2),
-            "2" => Ok(DigOut::Out3),
-            "3" => Ok(DigOut::Out4),
-            "4" => Ok(DigOut::Out5),
-            "5" => Ok(DigOut::Out6),
-            "6" => Ok(DigOut::Out7),
-            "7" => Ok(DigOut::Out8),
-            "8" => Ok(DigOut::Out9),
-            "9" => Ok(DigOut::Out10),
-            "10" => Ok(DigOut::Out11),
-            "11" => Ok(DigOut::Out12),
-            "12" => Ok(DigOut::Out13),
-            "13" => Ok(DigOut::Out14),
-            "14" => Ok(DigOut::Out15),
-            "15" => Ok(DigOut::Out16),
-            _ => Err(InstrumentError::BadInstrumentResponseString { msg: val }),
         }
     }
 }
