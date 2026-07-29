@@ -39,6 +39,8 @@ pub enum InstrumentError {
     NegativeResponse { msg: String },
     /// Could not convert the string message returned by the instrument the into specifided type.
     /// This is specified for instruments that handle conversions with `String` or `&str`.
+    /// Could not convert the string message returned by the instrument the into specifided type.
+    /// This is specified for instruments that handle conversions with `String` or `&str`.
     #[error(
         "Could not convert the message received from the instrument {msg} into the specified type."
     )]
