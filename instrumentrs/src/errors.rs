@@ -31,6 +31,12 @@ pub enum InstrumentError {
     /// An IO error occured when communicating with the device.
     #[error(transparent)]
     Io(#[from] io::Error),
+    /// Checksum
+    #[error("Checksum does not agree with expected value.")]
+    ChecksumError,
+    /// Instrument returned a negative response. The instrument specific error is given.
+    #[error("Instrument error: {msg}")]
+    NegativeResponse { msg: String },
     /// Could not convert the string message returned by the instrument the into specifided type.
     /// This is specified for instruments that handle conversions with `String` or `&str`.
     #[error(
