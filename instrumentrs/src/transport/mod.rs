@@ -5,9 +5,11 @@
 
 use crate::InstrumentError;
 pub use fn_sync::{read_until_terminator, write_all};
+pub use silent_interval::SilentInterval;
 pub use writable::Writable;
 
 pub mod fn_sync;
+mod silent_interval;
 pub mod writable;
 
 /// The transport trait takes a mutable reference to self in order to interact with the interface.
