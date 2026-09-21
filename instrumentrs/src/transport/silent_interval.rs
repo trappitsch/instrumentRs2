@@ -11,6 +11,7 @@ use std::time::{Duration, Instant};
 /// characters (3.5 at start and 3.5 at end).
 ///
 /// The silent interval is define in the static `SILENT_INT` in this module.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SilentInterval {
     duration: Duration,
     last_write: Instant,
@@ -48,12 +49,13 @@ mod test {
     #[test]
     pub fn silent_interval_duration_blocks_thread() {
         let mut si = SilentInterval::new(Duration::from_micros(100));
+        let si_cmp = si.clone();
 
         let tic = Instant::now();
         si.block();
         let toc = Instant::now();
 
-        assert!(si.last_write > tic);
+        assert!(si > si_cmp);
         assert!(toc - tic >= Duration::from_micros(100));
     }
 }
