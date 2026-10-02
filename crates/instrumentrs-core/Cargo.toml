@@ -1,5 +1,5 @@
 [package]
-name = "derive-macro-tests"
+name = "instrumentrs-core"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -7,11 +7,8 @@ homepage.workspace = true
 repository.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-publish = false
+description = "Core library for instrumentRs."
+readme = "README.md"
 
 [dependencies]
-instrumentrs-macros = { workspace = true }
-instrumentrs = { workspace = true }
-
-[dev-dependencies]
-trybuild = { workspace = true }
+thiserror = { workspace = true }

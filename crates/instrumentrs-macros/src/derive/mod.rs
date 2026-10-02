@@ -3,7 +3,7 @@
 use proc_macro2::{Span, TokenStream};
 use syn::{Data, DataStruct, DeriveInput};
 
-mod cmd;
+mod arg_parser;
 mod enums;
 mod error;
 mod structs;
