@@ -1,7 +1,7 @@
-use crate::derive::parser::CommandParserError;
+use crate::derive::arg_parser::CommandParserError;
 
 /// Placeholder type we are dealing with.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum PlaceholderType {
     /// In order of appearance and not length defined placeholder '{}'.
     Unordered,

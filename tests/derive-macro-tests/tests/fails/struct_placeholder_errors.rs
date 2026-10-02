@@ -43,4 +43,31 @@ fn main() {
         struct_item_2: MyEnum,
         struct_item_3: MyEnum,
     }
+
+    // placeholders not unique
+    #[derive(Parameter)]
+    #[cmd("{0} {0} {1}")]
+    struct MyStruct5 {
+        struct_item_1: MyEnum,
+        struct_item_2: MyEnum,
+        struct_item_3: MyEnum,
+    }
+
+    // no delimiter between parameters
+    #[derive(Parameter)]
+    #[cmd("{0} {1}{2}")]
+    struct MyStruct6 {
+        struct_item_1: MyEnum,
+        struct_item_2: MyEnum,
+        struct_item_3: MyEnum,
+    }
+
+    // invalid placeholders found
+    #[derive(Parameter)]
+    #[cmd("{0} {1} {2} {")]
+    struct MyStruct7 {
+        struct_item_1: MyEnum,
+        struct_item_2: MyEnum,
+        struct_item_3: MyEnum,
+    }
 }

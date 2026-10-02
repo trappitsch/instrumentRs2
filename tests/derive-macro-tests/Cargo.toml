@@ -10,8 +10,8 @@ rust-version.workspace = true
 publish = false
 
 [dependencies]
-instrumentrs-macros = { workspace = true }
 instrumentrs = { workspace = true }
+instrumentrs-macros = { workspace = true }
 
 [dev-dependencies]
 trybuild = { workspace = true }

@@ -7,20 +7,12 @@
 
 use std::collections::HashSet;
 
-use crate::derive::parser::{CommandParserError, placeholder::PlaceholderType};
+use syn::{Attribute, spanned::Spanned};
 
-/// How do we separate between commands?
-#[derive(Debug, Clone, PartialEq)]
-pub enum CommandSeparation {
-    /// A delimiter is used to separate between different types.
-    ///
-    /// Requires a DelimiterParser to parse the commands from the instrument.
-    Delimiter,
-    /// Character length is used to separate between different types.
-    ///
-    /// Requires a CharLengthParser to parse the commands from the instrument.
-    CharLength,
-}
+use crate::derive::{
+    arg_parser::{CommandParserError, CommandSeparation, placeholder::PlaceholderType},
+    utils,
+};
 
 /// Bracket parser.
 ///
@@ -28,7 +20,7 @@ pub enum CommandSeparation {
 /// information on what type of command we have here. It will also check for validity of the
 /// brackets. If the command actually contains a bracket, it can be escaped with \ beforehand.
 #[derive(Debug)]
-pub struct CommandParser {
+pub struct StringCommandParser {
     /// the original command.
     cmd: String,
     /// at which position is the left bracket (char position, not index!).
@@ -41,9 +33,18 @@ pub struct CommandParser {
     parser_type: CommandSeparation,
 }
 
-impl TryFrom<&str> for CommandParser {
+impl TryFrom<&str> for StringCommandParser {
     type Error = CommandParserError;
 
+    /// Tries to create a StringCommandParser from a `&str`.
+    ///
+    /// Errors:
+    /// - Invalid placeholders were found, not all '{' are closed, '{{}', etc.
+    /// - No delimiter was found between delimited placeholders.
+    /// - Placeholder type was invalid.
+    /// - No placeholders were found.
+    /// - Mixed placeholders were found.
+    /// - Positions in positional placeholders were not unique.
     fn try_from(s: &str) -> Result<Self, CommandParserError> {
         let mut left_pos = vec![];
         let mut right_pos = vec![];
@@ -97,7 +98,7 @@ impl TryFrom<&str> for CommandParser {
             }
         }
 
-        Ok(CommandParser {
+        Ok(StringCommandParser {
             cmd: s.to_string(),
             left_pos,
             right_pos,
@@ -107,8 +108,69 @@ impl TryFrom<&str> for CommandParser {
     }
 }
 
-impl CommandParser {
-    /// Get delimiter for a delimiter parsing type.
+impl StringCommandParser {
+    /// Create a new `StringCommandParser` for evaluating an enum.
+    ///
+    /// If created in this way, formatted values made with `format_with_one` can safely be
+    /// unwrapped as the same checks have been done at creation.
+    ///
+    /// Error:
+    /// - Could not find the "cmd" attribute in the provided attrs.
+    /// - An ordered placeholder was provided, which is invalid for enums.
+    /// - Number of placeholders is not equal to 1.
+    pub fn try_new_enum<S: Spanned>(attrs: &[Attribute], site: &S) -> syn::Result<Self> {
+        let sa = utils::get_named_attribute_content_string(attrs, "cmd", site)?;
+
+        let placeholder_error =
+            syn::Error::new(sa.span, "command string must have exactly one empty {}");
+
+        let cpf = Self::try_from(sa.value.as_str()).map_err(|_| placeholder_error.clone())?;
+
+        if cpf.get_number_placeholders() != 1
+            || cpf.in_between.first().ok_or(placeholder_error.clone())?
+                != &PlaceholderType::Unordered
+        {
+            return Err(placeholder_error);
+        }
+
+        Ok(cpf)
+    }
+
+    /// Create a new `FromatCommand` for evaluating a named struct.
+    ///
+    /// Error:
+    /// - Could not find the "cmd" attribute in the provided attrs.
+    /// - An ordered argument could not be parsed.
+    /// - A mix of ordered and unordered arguments were provided.
+    pub fn try_new_struct<S: Spanned>(
+        attrs: &[Attribute],
+        site: &S,
+        numb_fields: usize,
+    ) -> syn::Result<Self> {
+        let sa = utils::get_named_attribute_content_string(attrs, "cmd", site)?;
+
+        let cpf = Self::try_from(sa.value.as_str()).map_err(|e| syn::Error::new(sa.span, e))?;
+
+        if cpf.get_number_placeholders() != numb_fields {
+            return Err(syn::Error::new(
+                sa.span,
+                format!(
+                    "struct has {} field(s) but {} placeholders were provided",
+                    numb_fields,
+                    cpf.get_number_placeholders(),
+                ),
+            ));
+        }
+
+        Ok(cpf)
+    }
+
+    /// Get the original command.
+    pub fn get_command(&self) -> &str {
+        &self.cmd
+    }
+
+    /// Get delimiter for a delimiter parsing type
     ///
     /// Panics:
     /// - If the Argument type is not `CommandSeparation::Delimiter`.
@@ -150,11 +212,16 @@ impl CommandParser {
         (before, after)
     }
 
+    /// Get the number of placeholders.
+    pub fn get_number_placeholders(&self) -> usize {
+        self.in_between.len()
+    }
+
     /// Get the sort order for the parameters.
     ///
     /// This returns an index sorting key!
     pub fn get_sort_index_keys(&self) -> Option<Vec<usize>> {
-        let mut sort_keys: Vec<usize> = Vec::with_capacity(self.in_between.len());
+        let mut sort_keys: Vec<usize> = Vec::with_capacity(self.get_number_placeholders());
         for p in &self.in_between {
             match p {
                 PlaceholderType::Unordered | PlaceholderType::CharLength { .. } => return None,
@@ -211,7 +278,7 @@ mod test {
 
     #[test]
     fn unordered_simple() {
-        let bp = CommandParser::try_from("{}").unwrap();
+        let bp = StringCommandParser::try_from("{}").unwrap();
 
         assert_eq!(bp.cmd, "{}");
         assert_eq!(bp.left_pos, vec![0]);
@@ -222,7 +289,7 @@ mod test {
 
     #[test]
     fn unordered_multiple() {
-        let bp = CommandParser::try_from("CMD {},{},{}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {},{},{}").unwrap();
 
         assert_eq!(bp.cmd, "CMD {},{},{}");
         assert_eq!(bp.left_pos, vec![4, 7, 10]);
@@ -240,7 +307,7 @@ mod test {
 
     #[test]
     fn positional_simple() {
-        let bp = CommandParser::try_from("{0}").unwrap();
+        let bp = StringCommandParser::try_from("{0}").unwrap();
 
         assert_eq!(bp.cmd, "{0}");
         assert_eq!(bp.left_pos, vec![0]);
@@ -251,7 +318,7 @@ mod test {
 
     #[test]
     fn positional_multiple() {
-        let bp = CommandParser::try_from("CMD {1},{0},{2}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {1},{0},{2}").unwrap();
 
         assert_eq!(bp.cmd, "CMD {1},{0},{2}");
         assert_eq!(bp.left_pos, vec![4, 8, 12]);
@@ -269,7 +336,7 @@ mod test {
 
     #[test]
     fn charlength_simple() {
-        let bp = CommandParser::try_from("{:3}").unwrap();
+        let bp = StringCommandParser::try_from("{:3}").unwrap();
 
         assert_eq!(bp.cmd, "{:3}");
         assert_eq!(bp.left_pos, vec![0]);
@@ -283,7 +350,7 @@ mod test {
 
     #[test]
     fn charlength_multiple() {
-        let bp = CommandParser::try_from("CMD {:3},{:1},{:42}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {:3},{:1},{:42}").unwrap();
 
         assert_eq!(bp.cmd, "CMD {:3},{:1},{:42}");
         assert_eq!(bp.left_pos, vec![4, 9, 14]);
@@ -301,7 +368,7 @@ mod test {
 
     #[test]
     fn charlengthpos_simple() {
-        let bp = CommandParser::try_from("{0:3}").unwrap();
+        let bp = StringCommandParser::try_from("{0:3}").unwrap();
 
         assert_eq!(bp.cmd, "{0:3}");
         assert_eq!(bp.left_pos, vec![0]);
@@ -315,7 +382,7 @@ mod test {
 
     #[test]
     fn charlengthpos_multiple() {
-        let bp = CommandParser::try_from("CMD {2:3},{0:1},{1:42}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {2:3},{0:1},{1:42}").unwrap();
 
         assert_eq!(bp.cmd, "CMD {2:3},{0:1},{1:42}");
         assert_eq!(bp.left_pos, vec![4, 10, 16]);
@@ -333,7 +400,7 @@ mod test {
 
     #[test]
     fn get_delimiter_order_simple_unordered() {
-        let bp = CommandParser::try_from("{}").unwrap();
+        let bp = StringCommandParser::try_from("{}").unwrap();
         let (before, after) = bp.get_delimiter();
         let sort_keys = bp.get_sort_index_keys();
 
@@ -344,7 +411,7 @@ mod test {
 
     #[test]
     fn get_delimiter_order_multi_unordered() {
-        let bp = CommandParser::try_from("CMD {}, {},{}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {}, {},{}").unwrap();
         let (before, after) = bp.get_delimiter();
         let sort_keys = bp.get_sort_index_keys();
 
@@ -355,7 +422,7 @@ mod test {
 
     #[test]
     fn get_delimiter_order_multi_unordered_with_after() {
-        let bp = CommandParser::try_from("CMD {}, {},{}after").unwrap();
+        let bp = StringCommandParser::try_from("CMD {}, {},{}after").unwrap();
         let (before, after) = bp.get_delimiter();
         let sort_keys = bp.get_sort_index_keys();
 
@@ -366,21 +433,21 @@ mod test {
 
     #[test]
     fn get_sort_keys_positional_multi() {
-        let bp = CommandParser::try_from("CMD {1},{3},{2},{0}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {1},{3},{2},{0}").unwrap();
         assert_eq!(bp.get_sort_index_keys().unwrap(), [3, 0, 2, 1]);
     }
 
     /// Test if gaps are allowed in the sort keys. These are sort keys, not sort indices!
     #[test]
     fn get_sort_keys_positional_without_gaps() {
-        let bp = CommandParser::try_from("CMD {10},{5},{42},{6}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {10},{5},{42},{6}").unwrap();
         assert_eq!(bp.get_sort_index_keys().unwrap(), [1, 3, 0, 2]);
     }
 
     #[test]
     fn err_unmatched_bracket() {
         assert_matches!(
-            CommandParser::try_from("{} {").unwrap_err(),
+            StringCommandParser::try_from("{} {").unwrap_err(),
             CommandParserError::InvalidPlaceholder
         );
     }
@@ -388,7 +455,7 @@ mod test {
     #[test]
     fn err_no_placeholder() {
         assert_matches!(
-            CommandParser::try_from("").unwrap_err(),
+            StringCommandParser::try_from("").unwrap_err(),
             CommandParserError::NoPlaceholder
         );
     }
@@ -396,17 +463,17 @@ mod test {
     #[test]
     fn err_mixed_placeholders() {
         assert_matches!(
-            CommandParser::try_from("{} {1}").unwrap_err(),
+            StringCommandParser::try_from("{} {1}").unwrap_err(),
             CommandParserError::MixedPlaceholder
         );
 
         assert_matches!(
-            CommandParser::try_from("{} {:333}").unwrap_err(),
+            StringCommandParser::try_from("{} {:333}").unwrap_err(),
             CommandParserError::MixedPlaceholder
         );
 
         assert_matches!(
-            CommandParser::try_from("{0} {3:333}").unwrap_err(),
+            StringCommandParser::try_from("{0} {3:333}").unwrap_err(),
             CommandParserError::MixedPlaceholder
         );
     }
@@ -414,12 +481,12 @@ mod test {
     #[test]
     fn err_position_not_unique() {
         assert_matches!(
-            CommandParser::try_from("{0} {1} {1} {2}").unwrap_err(),
+            StringCommandParser::try_from("{0} {1} {1} {2}").unwrap_err(),
             CommandParserError::PositionNotUnique
         );
 
         assert_matches!(
-            CommandParser::try_from("{0:3} {1:3} {1:9} {2:3}").unwrap_err(),
+            StringCommandParser::try_from("{0:3} {1:3} {1:9} {2:3}").unwrap_err(),
             CommandParserError::PositionNotUnique
         );
     }
@@ -427,12 +494,12 @@ mod test {
     #[test]
     fn err_placeholder_in_placeholder() {
         assert_matches!(
-            CommandParser::try_from("{{}}").unwrap_err(),
+            StringCommandParser::try_from("{{}}").unwrap_err(),
             CommandParserError::InvalidPlaceholder
         );
 
         assert_matches!(
-            CommandParser::try_from("{} {    {} }, {}").unwrap_err(),
+            StringCommandParser::try_from("{} {    {} }, {}").unwrap_err(),
             CommandParserError::InvalidPlaceholder
         );
     }
@@ -440,7 +507,7 @@ mod test {
     #[test]
     fn err_delimited_placeholders_with_zero_length_delimiters() {
         assert_matches!(
-            CommandParser::try_from("{} {}{}").unwrap_err(),
+            StringCommandParser::try_from("{} {}{}").unwrap_err(),
             CommandParserError::DelimiterNotFound
         );
     }

@@ -20,4 +20,4 @@
 //! Note: A command string MUST only use one type of placeholder; mix and match is not allowed.
 
 pub mod char_length_parser;
-pub mod delimited_parser;
+pub mod string_delimited_parser;

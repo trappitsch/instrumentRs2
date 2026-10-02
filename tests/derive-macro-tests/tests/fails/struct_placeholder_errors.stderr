@@ -1,4 +1,4 @@
-error: command  contains no placeholder
+error: command contains no placeholder
   --> tests/fails/struct_placeholder_errors.rs:17:10
    |
 17 |     #[cmd("")]
@@ -16,8 +16,26 @@ error: struct has 3 field(s) but 2 placeholders were provided
 31 |     #[cmd("{} {}")]
    |          ^^^^^^^^^
 
-error: a mix of positional {0} and non positional {} placeholders is not allowed
+error: a mix of positional and non positional placeholders is not allowed
   --> tests/fails/struct_placeholder_errors.rs:40:10
    |
 40 |     #[cmd("{} {0} {}")]
    |          ^^^^^^^^^^^^^
+
+error: positional arguments are not unique
+  --> tests/fails/struct_placeholder_errors.rs:49:10
+   |
+49 |     #[cmd("{0} {0} {1}")]
+   |          ^^^^^^^^^^^^^^^
+
+error: not all placeholders are separated by delimiters
+  --> tests/fails/struct_placeholder_errors.rs:58:10
+   |
+58 |     #[cmd("{0} {1}{2}")]
+   |          ^^^^^^^^^^^^^^
+
+error: one or more invalid placeholders were found
+  --> tests/fails/struct_placeholder_errors.rs:67:10
+   |
+67 |     #[cmd("{0} {1} {2} {")]
+   |          ^^^^^^^^^^^^^^^^^

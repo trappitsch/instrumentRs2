@@ -4,7 +4,8 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{DataEnum, DeriveInput};
 
-use crate::derive::{cmd::CommandParseFormat, error, utils};
+use crate::derive::arg_parser::string_command_parser::StringCommandParser;
+use crate::derive::{error, utils};
 
 /// Create the implementation for an enum.
 pub fn get_impl(ast: &DeriveInput, data: &DataEnum) -> syn::Result<TokenStream> {
@@ -12,11 +13,11 @@ pub fn get_impl(ast: &DeriveInput, data: &DataEnum) -> syn::Result<TokenStream> 
 
     let name = &ast.ident;
 
-    let cpf = match CommandParseFormat::try_new_enum(&ast.attrs, &ast.ident.span()) {
+    let cpf = match StringCommandParser::try_new_enum(&ast.attrs, &ast.ident.span()) {
         Ok(res) => res,
         Err(err) => {
             err_agg.push(err);
-            CommandParseFormat::try_from("{}").expect("valid command string")
+            StringCommandParser::try_from("{}").expect("valid command string")
         }
     };
 
@@ -28,9 +29,7 @@ pub fn get_impl(ast: &DeriveInput, data: &DataEnum) -> syn::Result<TokenStream> 
         .map(|v| {
             let formatter = match utils::get_named_attribute_content_string(&v.attrs, "param", &v) {
                 Ok(res) => {
-                    let ret_val = cpf
-                        .format_with_one(&res.value)
-                        .expect("checked when command parse formatter for enum was created");
+                    let ret_val = cpf.get_command().replace("{}", &res.value);
                     string_attributes.push(res);
                     ret_val
                 }

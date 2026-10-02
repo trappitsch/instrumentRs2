@@ -2,7 +2,7 @@
 use crate::errors::InstrumentError;
 
 #[derive(Debug, Default)]
-pub struct Delimiter {
+pub struct StringDelimiter {
     /// Part that comes before the first argument.
     pub before: String,
     /// All the parts that come after each arguments.
@@ -12,16 +12,16 @@ pub struct Delimiter {
 /// This is a delimited parser.
 ///
 /// It contains the delimiters and, optionally, sort keys.
-pub struct DelimitedParser {
-    delimiter: Delimiter,
+pub struct StringDelimitedParser {
+    delimiter: StringDelimiter,
     sort_index: Option<Vec<usize>>,
 }
 
-impl DelimitedParser {
+impl StringDelimitedParser {
     /// Create a new parser from components.
     pub fn new(before: String, after: Vec<String>, sort_index: Option<Vec<usize>>) -> Self {
         Self {
-            delimiter: Delimiter { before, after },
+            delimiter: StringDelimiter { before, after },
             sort_index,
         }
     }
@@ -92,7 +92,7 @@ mod test {
     #[test]
     fn simple_command_parser() {
         // Command: "{}"
-        let dp = DelimitedParser::new("".to_string(), vec!["".to_string()], None);
+        let dp = StringDelimitedParser::new("".to_string(), vec!["".to_string()], None);
 
         assert_eq!(dp.parse("ASDF").unwrap(), ["ASDF"]);
     }
@@ -100,7 +100,7 @@ mod test {
     #[test]
     fn single_command_parser_with_start_and_end() {
         // Command: "START{}END"
-        let dp = DelimitedParser::new("START".to_string(), vec!["END".to_string()], None);
+        let dp = StringDelimitedParser::new("START".to_string(), vec!["END".to_string()], None);
 
         assert_eq!(dp.parse("STARTASDFEND").unwrap(), ["ASDF"]);
     }
@@ -108,7 +108,7 @@ mod test {
     #[test]
     fn multiple_command_parser() {
         // Command: "CMD {},{},{},{}"
-        let dp = DelimitedParser::new(
+        let dp = StringDelimitedParser::new(
             "CMD ".to_string(),
             vec![
                 ",".to_string(),
@@ -125,7 +125,7 @@ mod test {
     #[test]
     fn ensure_whitespace_is_trimmed() {
         // Command: "CMD {},{},{},{}"
-        let dp = DelimitedParser::new(
+        let dp = StringDelimitedParser::new(
             "CMD ".to_string(),
             vec![
                 ",".to_string(),
@@ -142,7 +142,7 @@ mod test {
     #[test]
     fn multiple_command_parse_with_order() {
         // Command: "CMD {2},{1},{0},{3}"
-        let dp = DelimitedParser::new(
+        let dp = StringDelimitedParser::new(
             "CMD ".to_string(),
             vec![
                 ",".to_string(),
