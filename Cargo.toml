@@ -1,21 +1,21 @@
 [workspace]
+resolver = "3"
 members = [
-  "examples/digoutbox",
   "crates/instrumentrs",
   "crates/instrumentrs-core",
   "crates/instrumentrs-macros",
-  "tests/derive-macro-tests",
-  "crates/instrumentrs-core",
+  "examples/digoutbox",
+  "tests/derive-macro-tests-string-char-length",
+  "tests/derive-macro-tests-string-delimited",
 ]
-resolver = "3"
 
 package.version = "0.2.0"
 package.authors = ["Reto Trappitsch <reto@galactic-forensics.space>"]
-package.license = "MIT OR Apache-2.0"
-package.homepage = "https://instrument.rs"
-package.repository = "https://github.com/trappitsch/instrumentrs"
 package.edition = "2024"
 package.rust-version = "1.97"
+package.homepage = "https://instrument.rs"
+package.repository = "https://github.com/trappitsch/instrumentrs"
+package.license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 instrumentrs = { path = "./crates/instrumentrs", version = "=0.2.0" }

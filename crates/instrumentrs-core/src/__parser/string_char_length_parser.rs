@@ -153,7 +153,7 @@ mod test {
     }
 
     #[test]
-    fn range_from_str_invalid_stirngs() {
+    fn range_from_str_invalid_strings() {
         assert!(RangeOfChar::try_from("23..45I").is_err());
         assert!(RangeOfChar::try_from("23..55..56").is_err());
         assert!(RangeOfChar::try_from("56").is_err());

@@ -121,22 +121,32 @@ impl StringCommandParser {
     pub fn try_new_enum<S: Spanned>(attrs: &[Attribute], site: &S) -> syn::Result<Self> {
         let sa = utils::get_named_attribute_content_string(attrs, "cmd", site)?;
 
-        let placeholder_error =
-            syn::Error::new(sa.span, "command string must have exactly one empty {}");
+        // TODO:
+        // 3. Rewrite to allow checking for the character length.
+        // 4. See what the char_length test does
+        // 5. See what the expansion looks like and then fix the rest
+
+        let placeholder_error = syn::Error::new(
+            sa.span,
+            "command string must contain one non-positional placeholder",
+        );
 
         let cpf = Self::try_from(sa.value.as_str()).map_err(|_| placeholder_error.clone())?;
 
-        if cpf.get_number_placeholders() != 1
-            || cpf.in_between.first().ok_or(placeholder_error.clone())?
-                != &PlaceholderType::Unordered
-        {
+        // make sure we have exactly one placeholder.
+        if cpf.get_number_placeholders() != 1 {
             return Err(placeholder_error);
         }
 
-        Ok(cpf)
+        // make sure that one placeholder is not positional.
+        let first_placeholder = cpf.in_between.first().ok_or(placeholder_error.clone())?;
+        match first_placeholder {
+            &PlaceholderType::Unordered | &PlaceholderType::CharLength { range: _ } => Ok(cpf),
+            _ => Err(placeholder_error),
+        }
     }
 
-    /// Create a new `FromatCommand` for evaluating a named struct.
+    /// Create a new `FormatCommand` for evaluating a named struct.
     ///
     /// Error:
     /// - Could not find the "cmd" attribute in the provided attrs.
