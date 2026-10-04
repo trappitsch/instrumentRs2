@@ -274,7 +274,8 @@ fn verify_placeholders(ph: &[PlaceholderType]) -> Result<(), CommandParserError>
 
 #[cfg(test)]
 mod test {
-    use crate::derive::arg_parser::placeholder::RangeOfChar;
+
+    use instrumentrs_core::__parser::string_char_length_parser::RangeOfChar;
 
     use super::*;
     use std::assert_matches;

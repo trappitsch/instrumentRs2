@@ -12,6 +12,7 @@ pub struct StringDelimiter {
 /// This is a delimited parser.
 ///
 /// It contains the delimiters and, optionally, sort keys.
+#[derive(Debug)]
 pub struct StringDelimitedParser {
     delimiter: StringDelimiter,
     sort_index: Option<Vec<usize>>,
