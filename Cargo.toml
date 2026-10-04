@@ -29,3 +29,5 @@ termcolor = "1.4"
 thiserror = "2"
 
 trybuild = "1"
+
+proptest = "1.11.0"

@@ -10,7 +10,7 @@ pub mod placeholder;
 pub mod string_command_parser;
 
 /// Parsing errors.
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum CommandParserError {
     /// For a placeholder that needs a delimited parser, a delimiter must be present between placeholders.
     #[error("not all placeholders are separated by delimiters")]

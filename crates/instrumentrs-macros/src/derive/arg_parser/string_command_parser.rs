@@ -225,8 +225,9 @@ impl StringCommandParser {
         for p in &self.in_between {
             match p {
                 PlaceholderType::Unordered | PlaceholderType::CharLength { .. } => return None,
-                PlaceholderType::Pos { pos }
-                | PlaceholderType::CharLengthPos { pos, length: _ } => sort_keys.push(*pos),
+                PlaceholderType::Pos { pos } | PlaceholderType::CharLengthPos { pos, range: _ } => {
+                    sort_keys.push(*pos)
+                }
             }
         }
 
@@ -259,7 +260,7 @@ fn verify_placeholders(ph: &[PlaceholderType]) -> Result<(), CommandParserError>
     let mut uniqueness_set = HashSet::new();
     for p in ph {
         match p {
-            PlaceholderType::Pos { pos } | PlaceholderType::CharLengthPos { pos, length: _ } => {
+            PlaceholderType::Pos { pos } | PlaceholderType::CharLengthPos { pos, range: _ } => {
                 if !uniqueness_set.insert(pos) {
                     return Err(CommandParserError::PositionNotUnique);
                 };
@@ -273,6 +274,8 @@ fn verify_placeholders(ph: &[PlaceholderType]) -> Result<(), CommandParserError>
 
 #[cfg(test)]
 mod test {
+    use crate::derive::arg_parser::placeholder::RangeOfChar;
+
     use super::*;
     use std::assert_matches;
 
@@ -336,31 +339,39 @@ mod test {
 
     #[test]
     fn charlength_simple() {
-        let bp = StringCommandParser::try_from("{:3}").unwrap();
+        let bp = StringCommandParser::try_from("{0..=3}").unwrap();
 
-        assert_eq!(bp.cmd, "{:3}");
+        assert_eq!(bp.cmd, "{0..=3}");
         assert_eq!(bp.left_pos, vec![0]);
-        assert_eq!(bp.right_pos, vec![3]);
+        assert_eq!(bp.right_pos, vec![6]);
         assert_eq!(
             bp.in_between,
-            vec![PlaceholderType::CharLength { length: 3 }]
+            vec![PlaceholderType::CharLength {
+                range: RangeOfChar { start: 0, end: 3 }
+            }]
         );
         assert_eq!(bp.parser_type, CommandSeparation::CharLength);
     }
 
     #[test]
     fn charlength_multiple() {
-        let bp = StringCommandParser::try_from("CMD {:3},{:1},{:42}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {0..3},{3..5},{5..42}").unwrap();
 
-        assert_eq!(bp.cmd, "CMD {:3},{:1},{:42}");
-        assert_eq!(bp.left_pos, vec![4, 9, 14]);
-        assert_eq!(bp.right_pos, vec![7, 12, 18]);
+        assert_eq!(bp.cmd, "CMD {0..3},{3..5},{5..42}");
+        assert_eq!(bp.left_pos, vec![4, 11, 18]);
+        assert_eq!(bp.right_pos, vec![9, 16, 24]);
         assert_eq!(
             bp.in_between,
             vec![
-                PlaceholderType::CharLength { length: 3 },
-                PlaceholderType::CharLength { length: 1 },
-                PlaceholderType::CharLength { length: 42 }
+                PlaceholderType::CharLength {
+                    range: RangeOfChar { start: 0, end: 2 }
+                },
+                PlaceholderType::CharLength {
+                    range: RangeOfChar { start: 3, end: 4 }
+                },
+                PlaceholderType::CharLength {
+                    range: RangeOfChar { start: 5, end: 41 }
+                }
             ]
         );
         assert_eq!(bp.parser_type, CommandSeparation::CharLength);
@@ -368,31 +379,43 @@ mod test {
 
     #[test]
     fn charlengthpos_simple() {
-        let bp = StringCommandParser::try_from("{0:3}").unwrap();
+        let bp = StringCommandParser::try_from("{4..7:0}").unwrap();
 
-        assert_eq!(bp.cmd, "{0:3}");
+        assert_eq!(bp.cmd, "{4..7:0}");
         assert_eq!(bp.left_pos, vec![0]);
-        assert_eq!(bp.right_pos, vec![4]);
+        assert_eq!(bp.right_pos, vec![7]);
         assert_eq!(
             bp.in_between,
-            vec![PlaceholderType::CharLengthPos { pos: 0, length: 3 }]
+            vec![PlaceholderType::CharLengthPos {
+                pos: 0,
+                range: RangeOfChar { start: 4, end: 6 }
+            }]
         );
         assert_eq!(bp.parser_type, CommandSeparation::CharLength);
     }
 
     #[test]
     fn charlengthpos_multiple() {
-        let bp = StringCommandParser::try_from("CMD {2:3},{0:1},{1:42}").unwrap();
+        let bp = StringCommandParser::try_from("CMD {0..3:2},{15..17:0},{10..15:1}").unwrap();
 
-        assert_eq!(bp.cmd, "CMD {2:3},{0:1},{1:42}");
-        assert_eq!(bp.left_pos, vec![4, 10, 16]);
-        assert_eq!(bp.right_pos, vec![8, 14, 21]);
+        assert_eq!(bp.cmd, "CMD {0..3:2},{15..17:0},{10..15:1}");
+        assert_eq!(bp.left_pos, vec![4, 13, 24]);
+        assert_eq!(bp.right_pos, vec![11, 22, 33]);
         assert_eq!(
             bp.in_between,
             vec![
-                PlaceholderType::CharLengthPos { pos: 2, length: 3 },
-                PlaceholderType::CharLengthPos { pos: 0, length: 1 },
-                PlaceholderType::CharLengthPos { pos: 1, length: 42 },
+                PlaceholderType::CharLengthPos {
+                    pos: 2,
+                    range: RangeOfChar { start: 0, end: 2 }
+                },
+                PlaceholderType::CharLengthPos {
+                    pos: 0,
+                    range: RangeOfChar { start: 15, end: 16 }
+                },
+                PlaceholderType::CharLengthPos {
+                    pos: 1,
+                    range: RangeOfChar { start: 10, end: 14 }
+                },
             ]
         );
         assert_eq!(bp.parser_type, CommandSeparation::CharLength);
@@ -468,12 +491,12 @@ mod test {
         );
 
         assert_matches!(
-            StringCommandParser::try_from("{} {:333}").unwrap_err(),
+            StringCommandParser::try_from("{} {5..6}").unwrap_err(),
             CommandParserError::MixedPlaceholder
         );
 
         assert_matches!(
-            StringCommandParser::try_from("{0} {3:333}").unwrap_err(),
+            StringCommandParser::try_from("{0} {3..10:333}").unwrap_err(),
             CommandParserError::MixedPlaceholder
         );
     }
@@ -486,7 +509,7 @@ mod test {
         );
 
         assert_matches!(
-            StringCommandParser::try_from("{0:3} {1:3} {1:9} {2:3}").unwrap_err(),
+            StringCommandParser::try_from("{0..1:3} {1..2:3} {2..3:9} {3..4:3}").unwrap_err(),
             CommandParserError::PositionNotUnique
         );
     }
