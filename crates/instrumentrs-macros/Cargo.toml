@@ -20,5 +20,8 @@ syn = { workspace = true, features = [
 ] } # FIXME: remove extra traits at the end
 thiserror = { workspace = true }
 
+[dev-dependencies]
+proptest = { workspace = true }
+
 [lib]
 proc-macro = true

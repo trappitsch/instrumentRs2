@@ -1,3 +1,5 @@
+use instrumentrs_core::__parser::string_char_length_parser::RangeOfChar;
+
 use crate::derive::arg_parser::CommandParserError;
 
 /// Placeholder type we are dealing with.
@@ -8,9 +10,9 @@ pub enum PlaceholderType {
     /// Sorting defined, but not length defined placeholder '{P}'.
     Pos { pos: usize },
     /// Length defined, in order of appearance placeholder '{:B}'.
-    CharLength { length: usize },
+    CharLength { range: RangeOfChar },
     /// Length defined and sorting defined placeholder '{P:B}'.
-    CharLengthPos { pos: usize, length: usize },
+    CharLengthPos { pos: usize, range: RangeOfChar },
 }
 
 impl TryFrom<&str> for PlaceholderType {
@@ -22,8 +24,8 @@ impl TryFrom<&str> for PlaceholderType {
             return Ok(Self::Unordered);
         }
 
-        // if there is no ':', it must be a positional type.
-        if !value.contains(':') {
+        // if there is no "..", it must be a delimited type.
+        if !value.contains("..") {
             let pos: usize = value
                 .parse()
                 .map_err(|_| CommandParserError::InvalidPlaceholder)?;
@@ -31,28 +33,17 @@ impl TryFrom<&str> for PlaceholderType {
         } else {
             let mut splt = value.split(':');
 
-            let pos_str = splt
-                .next()
-                .expect("checked by contains ':' and split on this");
-
-            let length: usize = splt
-                .next()
-                .expect("checked by contains ':' and split on this")
-                .parse()
+            let range_str = splt.next().expect("checked that it is not empty");
+            let range = RangeOfChar::try_from(range_str)
                 .map_err(|_| CommandParserError::InvalidPlaceholder)?;
 
-            // Split is not depleted or length is zero:
-            if splt.next().is_some() || length == 0 {
-                return Err(CommandParserError::InvalidPlaceholder);
-            }
-
-            if pos_str.is_empty() {
-                Ok(Self::CharLength { length })
-            } else {
+            if let Some(pos_str) = splt.next() {
                 let pos: usize = pos_str
                     .parse()
                     .map_err(|_| CommandParserError::InvalidPlaceholder)?;
-                Ok(Self::CharLengthPos { pos, length })
+                Ok(Self::CharLengthPos { pos, range })
+            } else {
+                Ok(Self::CharLength { range })
             }
         }
     }
@@ -67,8 +58,8 @@ impl PlaceholderType {
         match &self {
             Self::Unordered => matches!(rhs, &PlaceholderType::Unordered),
             Self::Pos { pos: _ } => matches!(rhs, &PlaceholderType::Pos { .. }),
-            Self::CharLength { length: _ } => matches!(rhs, &PlaceholderType::CharLength { .. }),
-            Self::CharLengthPos { pos: _, length: _ } => {
+            Self::CharLength { range: _ } => matches!(rhs, &PlaceholderType::CharLength { .. }),
+            Self::CharLengthPos { pos: _, range: _ } => {
                 matches!(rhs, &PlaceholderType::CharLengthPos { .. })
             }
         }
@@ -104,28 +95,35 @@ mod test {
     #[test]
     fn char_length_placeholder() {
         assert_matches!(
-            PlaceholderType::try_from(":3").unwrap(),
-            PlaceholderType::CharLength { length: 3 }
+            PlaceholderType::try_from("0..3").unwrap(),
+            PlaceholderType::CharLength {
+                range: RangeOfChar { start: 0, end: 2 }
+            }
         );
 
         assert_matches!(
-            PlaceholderType::try_from(":1").unwrap(),
-            PlaceholderType::CharLength { length: 1 }
+            PlaceholderType::try_from("0..=3").unwrap(),
+            PlaceholderType::CharLength {
+                range: RangeOfChar { start: 0, end: 3 }
+            }
         );
     }
 
     #[test]
     fn char_length_positional_placeholder() {
         assert_matches!(
-            PlaceholderType::try_from("0:3").unwrap(),
-            PlaceholderType::CharLengthPos { pos: 0, length: 3 }
+            PlaceholderType::try_from("0..3:0").unwrap(),
+            PlaceholderType::CharLengthPos {
+                pos: 0,
+                range: RangeOfChar { start: 0, end: 2 }
+            }
         );
 
         assert_matches!(
-            PlaceholderType::try_from("42:13").unwrap(),
+            PlaceholderType::try_from("42..=42:42").unwrap(),
             PlaceholderType::CharLengthPos {
                 pos: 42,
-                length: 13
+                range: RangeOfChar { start: 42, end: 42 }
             }
         );
     }

@@ -1,12 +1,12 @@
 [package]
-name = "derive-macro-tests"
+name = "derive-macro-tests-string-delimited"
 version.workspace = true
 authors.workspace = true
-license.workspace = true
-homepage.workspace = true
-repository.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
 publish = false
 
 [dependencies]

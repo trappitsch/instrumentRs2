@@ -12,3 +12,6 @@ readme = "README.md"
 
 [dependencies]
 thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
