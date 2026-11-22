@@ -5,7 +5,7 @@ use std::io::{Read, Write};
 /// The parameter trait implements the methods to transform any of your enums or structs into / from
 /// a `Writable` parameter.
 use crate::InstrumentError;
-use instrumentrs::transport::{Transport, Writable};
+use instrumentrs::transport::{MetaData, Transport, Writable};
 
 use crate::{DigOut, DigOutState, DigOutStates};
 
@@ -32,29 +32,29 @@ impl<I: Read + Write> DigOutBox<I> {
     }
 
     pub fn set_all_off(&mut self) -> Result<(), InstrumentError> {
-        self.sendcmd("ALLOFF", None, Some(&[]))
+        self.sendcmd("ALLOFF", None, Some(&[]), MetaData::None)
     }
 
     /// Get all channels in its own structure.
     pub fn get_all(&mut self) -> Result<DigOutStates, InstrumentError> {
-        let a = self.query("ALLDO", None, None)?;
+        let a = self.query("ALLDO", None, None, MetaData::None)?;
         DigOutStates::try_from_writable(a)
     }
 
     /// Bool demo - intentionally not newtyped.
     pub fn get_interlock_state(&mut self) -> Result<bool, InstrumentError> {
-        let a = self.query("INTERLOCKS", None, None)?;
+        let a = self.query("INTERLOCKS", None, None, MetaData::None)?;
         bool::try_from_writable(a)
     }
 
     /// Integer demo - software lockout state.
     pub fn get_software_lockout(&mut self) -> Result<usize, InstrumentError> {
-        let a = self.query("SWL", None, None)?;
+        let a = self.query("SWL", None, None, MetaData::None)?;
         usize::try_from_writable(a)
     }
 
     pub fn get_name(&mut self) -> Result<String, InstrumentError> {
-        let a = self.query("*IDN", None, None)?;
+        let a = self.query("*IDN", None, None, MetaData::None)?;
         String::try_from_writable(a)
     }
 
@@ -76,12 +76,18 @@ impl<'d, I: Read + Write> DigOutBoxChannel<'d, I> {
 
     /// Newtype demo for one channel.
     pub fn get_channel(&mut self) -> Result<DigOutState, InstrumentError> {
-        let a = self.device.query("DO", Some(self.idx), None)?;
+        let a = self
+            .device
+            .query("DO", Some(self.idx), None, MetaData::None)?;
         DigOutState::try_from_writable(a)
     }
 
     pub fn set_channel(&mut self, val: DigOutState) -> Result<(), InstrumentError> {
-        self.device
-            .sendcmd("DO", Some(self.idx), Some(&[&val.to_writable()]))
+        self.device.sendcmd(
+            "DO",
+            Some(self.idx),
+            Some(&[&val.to_writable()]),
+            MetaData::None,
+        )
     }
 }
