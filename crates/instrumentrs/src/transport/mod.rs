@@ -19,12 +19,14 @@ pub mod writable;
 /// and then forwarded.
 pub trait Transport<W: Writable, WR: Writable> {
     type Channel;
+    type Metadata;
     /// The send command that you need to implement.
     fn sendcmd(
         &mut self,
         cmd: W,
         idx: Option<Self::Channel>,
-        args: Option<&[W]>,
+        data: Option<&[W]>,
+        metadata: Self::Metadata,
     ) -> Result<(), InstrumentError>;
 
     /// The query command that you need to implement.
@@ -32,6 +34,16 @@ pub trait Transport<W: Writable, WR: Writable> {
         &mut self,
         cmd: W,
         idx: Option<Self::Channel>,
-        args: Option<&[W]>,
+        data: Option<&[W]>,
+        metadata: Self::Metadata,
     ) -> Result<WR, InstrumentError>;
+}
+
+/// Default InstrumentRs Metadata.
+///
+/// This enum is non-exhaustive as we might want to add other options in the future.
+#[derive(Default, Debug, PartialEq, Eq)]
+pub enum MetaData {
+    #[default]
+    None,
 }

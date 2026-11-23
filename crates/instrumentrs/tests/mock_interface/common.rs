@@ -4,7 +4,7 @@ use std::io::{Read, Write};
 
 use instrumentrs::{
     InstrumentError,
-    transport::{Transport, Writable, read_until_terminator, write_all},
+    transport::{MetaData, Transport, Writable, read_until_terminator, write_all},
 };
 
 /// A mock instrument using string operations.
@@ -26,21 +26,24 @@ impl<I: std::io::Read + Write> InstrumentStr<I> {
     }
 
     pub fn write_str(&mut self, cmd: &str) -> Result<(), InstrumentError> {
-        self.sendcmd(cmd, None, None)
+        self.sendcmd(cmd, None, None, MetaData::default())
     }
 
     pub fn query_str(&mut self, cmd: &str) -> Result<String, InstrumentError> {
-        self.query(cmd, None, None)
+        self.query(cmd, None, None, MetaData::default())
     }
 }
 
 impl<I: Read + Write> Transport<&str, String> for InstrumentStr<I> {
     type Channel = usize;
+    type Metadata = MetaData;
+
     fn sendcmd(
         &mut self,
         cmd: &str,
-        _idx: Option<usize>,
-        _args: Option<&[&str]>,
+        _idx: Option<Self::Channel>,
+        _data: Option<&[&str]>,
+        _metadata: Self::Metadata,
     ) -> Result<(), instrumentrs::InstrumentError> {
         let buf = cmd.to_byte_slice();
         write_all(&mut self.interface, buf, self.terminator.to_byte_slice())?;
@@ -50,8 +53,9 @@ impl<I: Read + Write> Transport<&str, String> for InstrumentStr<I> {
     fn query(
         &mut self,
         cmd: &str,
-        _idx: Option<usize>,
-        _args: Option<&[&str]>,
+        _idx: Option<Self::Channel>,
+        _data: Option<&[&str]>,
+        _metadata: Self::Metadata,
     ) -> Result<String, InstrumentError> {
         let buf = cmd.to_byte_slice();
         write_all(&mut self.interface, buf, self.terminator.to_byte_slice())?;
@@ -75,21 +79,24 @@ impl<I: std::io::Read + Write> InstrumentU8<I> {
     }
 
     pub fn write_u8(&mut self, cmd: &[u8]) -> Result<(), InstrumentError> {
-        self.sendcmd(cmd, None, None)
+        self.sendcmd(cmd, None, None, MetaData::default())
     }
 
     pub fn query_u8(&mut self, cmd: &[u8]) -> Result<Vec<u8>, InstrumentError> {
-        self.query(cmd, None, None)
+        self.query(cmd, None, None, MetaData::default())
     }
 }
 
 impl<I: Read + Write> Transport<&[u8], Vec<u8>> for InstrumentU8<I> {
     type Channel = usize;
+    type Metadata = MetaData;
+
     fn sendcmd(
         &mut self,
         cmd: &[u8],
-        _idx: Option<usize>,
-        _args: Option<&[&[u8]]>,
+        _idx: Option<Self::Channel>,
+        _data: Option<&[&[u8]]>,
+        _metadata: Self::Metadata,
     ) -> Result<(), InstrumentError> {
         self.interface.write_all(cmd)?;
         self.interface.flush()?;
@@ -100,10 +107,11 @@ impl<I: Read + Write> Transport<&[u8], Vec<u8>> for InstrumentU8<I> {
     fn query(
         &mut self,
         cmd: &[u8],
-        _idx: Option<usize>,
-        _args: Option<&[&[u8]]>,
+        _idx: Option<Self::Channel>,
+        _data: Option<&[&[u8]]>,
+        _metadata: Self::Metadata,
     ) -> Result<Vec<u8>, InstrumentError> {
-        self.sendcmd(cmd, _idx, None)?;
+        self.sendcmd(cmd, _idx, _data, _metadata)?;
         let mut buf = [0u8; 5];
         self.interface.read_exact(&mut buf)?;
         Ok(buf.to_vec())

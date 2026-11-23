@@ -118,7 +118,6 @@ dependencies = [
 name = "instrumentrs-macros"
 version = "0.2.0"
 dependencies = [
- "instrumentrs-core",
  "proc-macro2",
  "quote",
  "syn",

@@ -7,7 +7,7 @@
 use std::io::{Read, Write};
 
 use crate::InstrumentError;
-use instrumentrs::transport::{Transport, Writable, read_until_terminator, write_all};
+use instrumentrs::transport::{MetaData, Transport, Writable, read_until_terminator, write_all};
 
 use crate::{DigOut, DigOutBox};
 
@@ -41,13 +41,16 @@ impl<I: Read + Write> DigOutBox<I> {
 
 impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
     type Channel = DigOut;
+    type Metadata = MetaData;
+
     fn sendcmd(
         &mut self,
         cmd: &str,
-        idx: Option<DigOut>,
-        args: Option<&[&str]>,
+        idx: Option<Self::Channel>,
+        data: Option<&[&str]>,
+        _metadata: Self::Metadata,
     ) -> Result<(), InstrumentError> {
-        let cmd_vec = self.make_pkg(cmd, idx, args);
+        let cmd_vec = self.make_pkg(cmd, idx, data);
 
         write_all(&mut self.interface, &cmd_vec, self.terminator.as_bytes())?;
 
@@ -57,8 +60,9 @@ impl<I: Read + Write> Transport<&str, String> for DigOutBox<I> {
     fn query(
         &mut self,
         cmd: &str,
-        idx: Option<DigOut>,
-        _args: Option<&[&str]>,
+        idx: Option<Self::Channel>,
+        _data: Option<&[&str]>,
+        _metadata: Self::Metadata,
     ) -> Result<String, InstrumentError> {
         let cmd_vec = self.make_pkg(cmd, idx, None);
 
