@@ -13,11 +13,11 @@
 //! - `{}`: Empty placeholders, parameters after parsing should be returned in order.
 //! - `{P}`: A positional placeholder: parameters after parsing should be returned in the order,
 //!   here `P` must be parsable as a `usize`.
-//! - `{:B}`: A placeholder that defines that this placeholder always contains `B` characters.
-//!   Here `B` must be parsable as a number.
-//! - `{P:B}` A positional, character length defining placeholder.
+//! - `{X..=Y}`: A placeholder that the range of charactes to read. Can be exclusive upper bound
+//!   (X..Y) or inclusive (X..=Y). X and Y must be parsable as numbers.
+//! - `{X..=Y:P}` Placeholder with range of characters to read and a positional argument P.
 //!
 //! Note: A command string MUST only use one type of placeholder; mix and match is not allowed.
 
-pub mod char_length_parser;
+pub mod string_char_length_parser;
 pub mod string_delimited_parser;

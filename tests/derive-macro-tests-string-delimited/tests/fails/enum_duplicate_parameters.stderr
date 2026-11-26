@@ -1,0 +1,17 @@
+error: duplicate value found: must be unique
+  --> tests/fails/enum_duplicate_parameters.rs:11:16
+   |
+11 |         #[param("1")]
+   |                ^^^^^
+
+error: duplicate value found: must be unique
+  --> tests/fails/enum_duplicate_parameters.rs:13:16
+   |
+13 |         #[param("1")]
+   |                ^^^^^
+
+error: duplicate value found: must be unique
+  --> tests/fails/enum_duplicate_parameters.rs:24:16
+   |
+24 |         #[param("1")]
+   |                ^^^^^

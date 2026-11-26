@@ -1,0 +1,23 @@
+error: missing attribute for derive InstrumentParam: #[cmd(...)]
+ --> tests/fails/enum_params_and_cmd_missing.rs:7:10
+  |
+7 |     enum Example {
+  |          ^^^^^^^
+
+error: missing attribute for derive InstrumentParam: #[param(...)]
+ --> tests/fails/enum_params_and_cmd_missing.rs:8:9
+  |
+8 |         Item1,
+  |         ^^^^^
+
+error: missing attribute for derive InstrumentParam: #[param(...)]
+ --> tests/fails/enum_params_and_cmd_missing.rs:9:9
+  |
+9 |         Item2,
+  |         ^^^^^
+
+error: missing attribute for derive InstrumentParam: #[param(...)]
+  --> tests/fails/enum_params_and_cmd_missing.rs:10:9
+   |
+10 |         Item3,
+   |         ^^^^^

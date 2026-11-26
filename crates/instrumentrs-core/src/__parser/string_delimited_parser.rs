@@ -70,14 +70,14 @@ impl StringDelimitedParser {
             .collect();
 
         if let Some(ind) = &self.sort_index
-            && let Ok(vec) = params
+            && let Ok(mut vec) = params
         {
-            // NOTE:
+            // Safety note:
             // Indexing into `vec[*i]` here should be safe as the bracket parser ensures that:
             // 1. The sort indexes have the same length as the number of placeholders.
             // 2. The sort indexes are actually indexes.
-            // TODO: Can we avoid this clone below?
-            let params_sorted: Vec<String> = ind.iter().map(|i| vec[*i].clone()).collect();
+            let params_sorted: Vec<String> =
+                ind.iter().map(|i| std::mem::take(&mut vec[*i])).collect();
             return Ok(params_sorted);
         };
 
